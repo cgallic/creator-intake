@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <title>Claim your page</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap" />
+    <style>
+      :root { --cobalt: #2343e8; --ink: #10132a; --ink-soft: #4b4f66; --mist: #eef0fb; --caption: #ffe14d; --rec: #ff3b47; --font: "Archivo", "Helvetica Neue", Arial, sans-serif; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: var(--font); font-size: 18px; line-height: 1.55; color: var(--ink); background: #fff; }
+      a { color: inherit; }
+      :focus-visible { outline: 3px solid var(--cobalt); outline-offset: 3px; border-radius: 6px; }
+      .top { background: var(--cobalt); color: #fff; padding: 0 clamp(16px, 4vw, 32px) 40px; }
+      .wrap { max-width: 720px; margin: 0 auto; }
+      .bar { display: flex; justify-content: space-between; padding: 22px 0; }
+      .bar a { font-weight: 700; text-decoration: none; }
+      h1 { font-weight: 900; font-stretch: 125%; font-size: clamp(36px, 5.6vw, 64px); line-height: 0.92; letter-spacing: -0.035em; margin: 22px 0 14px; }
+      .top p { color: rgba(255,255,255,0.86); margin: 0; max-width: 32em; }
+      main { padding: 32px clamp(16px, 4vw, 32px) 64px; }
+      ol.steps { list-style: none; counter-reset: s; margin: 0; padding: 0; display: grid; gap: 18px; }
+      ol.steps > li { counter-increment: s; background: var(--mist); border-radius: 20px; padding: 22px 22px 22px 70px; position: relative; }
+      ol.steps > li::before { content: counter(s); position: absolute; left: 22px; top: 18px; font-weight: 900; font-stretch: 125%; font-size: 34px; color: var(--cobalt); line-height: 1; }
+      h2 { margin: 0 0 6px; font-weight: 800; font-stretch: 110%; font-size: 22px; line-height: 1.15; }
+      .muted { color: var(--ink-soft); font-size: 16px; margin: 0 0 12px; }
+      .code { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      .code b { font-size: 26px; font-weight: 900; letter-spacing: 0.02em; background: #fff; border: 2px dashed var(--ink); border-radius: 12px; padding: 6px 14px; user-select: all; }
+      label { display: block; font-weight: 700; font-size: 15px; margin: 12px 0 4px; }
+      label span { font-weight: 500; color: var(--ink-soft); }
+      input { width: 100%; font: inherit; font-size: 16px; padding: 12px 14px; border-radius: 12px; border: 1px solid #c9cde0; background: #fff; color: var(--ink); }
+      button, .go { font: inherit; font-weight: 800; font-stretch: 112%; font-size: 17px; border: none; border-radius: 999px; padding: 14px 24px; cursor: pointer; text-decoration: none; display: inline-block; }
+      .primary { background: var(--cobalt); color: #fff; }
+      .pay { background: var(--caption); color: var(--ink); box-shadow: 0 4px 0 rgba(16,19,42,0.3); }
+      .ghost { background: #fff; color: var(--ink); border: 2px solid var(--ink); padding: 10px 18px; font-size: 15px; }
+      button:disabled { opacity: 0.55; cursor: default; }
+      .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+      .status { margin-top: 12px; font-weight: 700; }
+      .status.bad { color: var(--rec); }
+      .done { background: var(--ink); color: #fff; border-radius: 20px; padding: 24px; }
+      .done h2 { color: #fff; font-size: 28px; }
+      .done p { color: rgba(255,255,255,0.8); }
+      .done .go { background: var(--caption); color: var(--ink); }
+      pre { background: #fff; color: var(--ink); border-radius: 10px; padding: 12px; font-size: 13px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <nav class="bar"><a href="./for-creators">How it works</a><a href="./new">Build a page</a></nav>
+        <h1 id="h">Claim your page.</h1>
+        <p id="sub">Prove the channel is yours, add your next step, and the page becomes yours: your link, no "unofficial" banner, leads sent to you.</p>
+      </div>
+    </header>
+    <main class="wrap">
+      <div id="app"><p class="muted">Loading…</p></div>
+    </main>
+    <script>
+      const $ = (s) => document.querySelector(s);
+      const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      const params = new URLSearchParams(location.search);
+      const slug = params.get("c") || "";
+      const rel = (u) => (u || "").replace(/^\//, "./");
+      let info = null;
+
+      async function api(path, body) {
+        const r = await fetch(path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {});
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || `Something went wrong (${r.status}).`);
+        return d;
+      }
+
+      function done(url) {
+        $("#app").innerHTML = `<div class="done"><h2>It's yours.</h2><p>${esc(info ? info.name : "Your")} page now sends people to your next step, without the preview banner. You can take the code back out of your channel description.</p>
+          <div class="row"><a class="go" href="${esc(rel(url))}">Open your page</a></div>
+          <p style="margin-top:18px">Put it in your link-in-bio and pinned comments. To embed it on your site:</p>
+          <pre>&lt;iframe src="${esc(location.origin + "/c/" + slug)}" style="width:100%;height:900px;border:0" loading="lazy"&gt;&lt;/iframe&gt;</pre></div>`;
+      }
+
+      function pay(id) {
+        const price = info ? `$${(info.price / 100).toFixed(0)}` : "$49";
+        $("#app").insertAdjacentHTML("beforeend", `<div class="row" id="payrow"><button class="pay" id="pay">${info && info.paid ? `Claim it for ${price}, once` : "Claim it (free during launch)"}</button></div>`);
+        $("#pay").onclick = async () => {
+          $("#pay").disabled = true;
+          try {
+            const c = await api("./api/claim?a=checkout", { id });
+            if (c.url) { location.href = c.url; return; }
+            const d = await api("./api/claim?a=complete", { id });
+            done(d.url);
+          } catch (e) { $("#pay").disabled = false; status(e.message, true); }
+        };
+      }
+
+      function status(msg, bad) {
+        let el = $("#status");
+        if (!el) { $("#app").insertAdjacentHTML("beforeend", `<p class="status" id="status"></p>`); el = $("#status"); }
+        el.textContent = msg; el.classList.toggle("bad", !!bad);
+      }
+
+      async function watch(id) {
+        for (;;) {
+          const j = await api(`./api/new?id=${encodeURIComponent(id)}`).catch(() => null);
+          if (j && j.status === "verified") { status("The code checks out."); pay(id); return; }
+          if (j && j.status === "claimed") { done(j.url); return; }
+          if (j && j.status === "failed") { status(j.error, true); $("#verify").disabled = false; return; }
+          status(j && j.detail ? `${j.detail}…` : "Checking your channel…");
+          await new Promise((s) => setTimeout(s, 3000));
+        }
+      }
+
+      async function start() {
+        if (!slug) { $("#app").innerHTML = `<p class="muted">Open this from the page you want to claim, or <a href="./new">build a page</a> first.</p>`; return; }
+        try { info = await api(`./api/claim?c=${encodeURIComponent(slug)}`); }
+        catch (e) { $("#app").innerHTML = `<p class="status bad">${esc(e.message)}</p>`; return; }
+        $("#h").textContent = `Claim ${info.name}'s page.`;
+        if (info.claimed) { $("#app").innerHTML = `<p class="muted">This page has already been claimed.</p><div class="row"><a class="go primary" href="${esc(rel("/c/" + slug))}">Open it</a></div>`; return; }
+
+        // Back from Stripe Checkout
+        const job = params.get("job"), session = params.get("session_id");
+        if (job && session) {
+          $("#app").innerHTML = `<p class="muted">Confirming your payment…</p>`;
+          try { const d = await api("./api/claim?a=complete", { id: job, session_id: session }); done(d.url); }
+          catch (e) { $("#app").innerHTML = `<p class="status bad">${esc(e.message)}</p>`; }
+          return;
+        }
+
+        $("#app").innerHTML = `
+          <ol class="steps">
+            <li><h2>Put this code in your channel description</h2>
+              <p class="muted">Anywhere in it. Only the channel's owner can do that, which is how we know it's you. You can remove it once you've claimed the page.</p>
+              <div class="code"><b id="code">${esc(info.code)}</b><button class="ghost" id="copy" type="button">Copy</button></div>
+              <p class="muted" style="margin-top:10px">YouTube Studio → Customization → Basic info → Description. <a href="${esc(info.channel)}" target="_blank" rel="noopener">Your channel</a></p></li>
+            <li><h2>Where should people go next?</h2>
+              <p class="muted">Your course, your booking link, your product. Leave it blank to keep pointing at your channel.</p>
+              <label for="offer">Next-step link <span>(optional)</span></label><input id="offer" type="url" placeholder="https://" />
+              <label for="label">Button text <span>(optional)</span></label><input id="label" type="text" maxlength="40" placeholder="Book a call" />
+              <label for="hook">Send leads to a webhook <span>(optional: Zapier, Make, your CRM)</span></label><input id="hook" type="url" placeholder="https://hooks.zapier.com/..." /></li>
+            <li><h2>Check and claim</h2>
+              <p class="muted">We read your channel description, then the page is yours.</p>
+              <div class="row"><button class="primary" id="verify" type="button">Check my channel</button></div></li>
+          </ol>`;
+        $("#copy").onclick = async () => { try { await navigator.clipboard.writeText(info.code); $("#copy").textContent = "Copied"; } catch (_) { const r = document.createRange(); r.selectNode($("#code")); getSelection().removeAllRanges(); getSelection().addRange(r); } };
+        $("#verify").onclick = async () => {
+          $("#verify").disabled = true;
+          try {
+            const { id } = await api("./api/claim?a=start", { c: slug, offer_url: $("#offer").value, offer_label: $("#label").value, webhook_url: $("#hook").value });
+            status("Checking your channel…");
+            watch(id);
+          } catch (e) { $("#verify").disabled = false; status(e.message, true); }
+        };
+      }
+      start();
+    </script>
+  </body>
+</html>

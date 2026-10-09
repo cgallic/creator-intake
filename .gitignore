@@ -7,3 +7,5 @@ creators/*/captions/
 .vercel
 creators/*/unscreened.json
 creators/*/fetch.log
+
+.env*.local

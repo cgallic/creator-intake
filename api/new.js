@@ -1,12 +1,13 @@
 /**
- * POST /api/new  { channel }      -> { id }           queue a page build
- * GET  /api/new?id=<id>           -> the job's status  (polled by new.html)
+ * Build a preview page from any public channel. Previews are labelled unofficial, kept
+ * out of search, and their only next step is the creator's own channel. The OWNER
+ * turns one into their page by claiming it (api/claim.js): a code in the channel
+ * description proves it's theirs, then $49 once.
  *
- * Anyone can paste any channel, so a self-serve page is an UNOFFICIAL PREVIEW:
- * built from public videos, marked as such on the page, kept out of search, and
- * its only next step is the creator's own channel until the owner claims it.
+ *   POST /api/new { channel }      -> { id }  or { ready: true, url } if built in the last 7 days
+ *   GET  /api/new?id=<id>          -> the job's status (new.html and claim.html poll it)
+ *
  * Limits: NEW_BUILDS_PER_DAY across everyone (default 40), 3 per visitor per day.
- * A channel built in the last 7 days returns the existing page instead of rebuilding.
  */
 const crypto = require("node:crypto");
 const store = require("./_store");
@@ -25,19 +26,32 @@ function parseChannel(raw) {
 }
 const slugOf = (key) => key.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "creator";
 
+/** The same code for the same channel every time, unguessable without the server secret. */
+function verifyCode(slug) {
+  const h = crypto.createHmac("sha256", process.env.WORKER_SECRET || "dev").update(`verify:${slug}`).digest("hex");
+  return `ask-${h.slice(0, 8)}`;
+}
+
+function cleanUrl(u) {
+  const s = String(u || "").trim();
+  if (!s) return null;
+  try { const x = new URL(s); return /^https?:$/.test(x.protocol) ? x.toString() : null; } catch (_) { return null; }
+}
+
 module.exports = async (req, res) => {
   if (req.method === "GET") {
     const id = String((req.query && req.query.id) || "");
     if (!/^\d{4}-\d{2}-\d{2}\/[a-f0-9]{16}$/.test(id)) return res.status(404).json({ error: "not found" });
     const job = await store.getJSON(`jobs/${id}.json`);
     if (!job) return res.status(404).json({ error: "not found" });
-    const { channel, status, stage, detail, url, error, created_at, updated_at, name } = job;
-    return res.status(200).json({ id, channel, status, stage, detail, url, error, created_at, updated_at, name });
+    const { type, channel, slug, status, stage, detail, url, error, created_at, updated_at, name } = job;
+    return res.status(200).json({ id, type, channel, slug, status, stage, detail, url, error, created_at, updated_at, name });
   }
   if (req.method !== "POST") return res.status(405).json({ error: "GET or POST" });
 
-  const ch = parseChannel(req.body && req.body.channel);
-  if (!ch) return res.status(400).json({ error: "Paste a YouTube channel link, like youtube.com/@yourname, or just @yourname." });
+  const b = req.body || {};
+  const ch = parseChannel(b.channel);
+  if (!ch) return res.status(400).json({ error: "Paste your YouTube channel link, like youtube.com/@yourname, or just @yourname." });
   const slug = slugOf(ch.key);
 
   // Built recently? Hand back the page.
@@ -56,9 +70,14 @@ module.exports = async (req, res) => {
 
   const id = `${day}/${crypto.randomBytes(8).toString("hex")}`;
   const now = new Date().toISOString();
-  await store.putJSON(`jobs/${id}.json`, { id, channel: ch.url, slug, status: "queued", stage: "queued", detail: "Waiting for a builder", created_at: now, updated_at: now });
+  await store.putJSON(`jobs/${id}.json`, {
+    id, type: "build", channel: ch.url, slug,
+    status: "queued", stage: "queued", detail: "Waiting for a builder", created_at: now, updated_at: now,
+  });
   return res.status(200).json({ id });
 };
 
 module.exports.parseChannel = parseChannel;
 module.exports.slugOf = slugOf;
+module.exports.verifyCode = verifyCode;
+module.exports.cleanUrl = cleanUrl;

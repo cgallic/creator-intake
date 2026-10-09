@@ -8,14 +8,16 @@
  * It never holds the OpenRouter key: every AI call (thumbnail screening, drafting
  * the page, topic tagging) goes through the app's narrow proxy at /api/ai.
  *
- * One build, start to finish (a few minutes):
- *   1. read the channel: name, handle, description, avatar
- *   2. pull captions for the newest PREVIEW_CLIPS uploads (shorts + videos), in parallel
+ * One build, start to finish (5-20 minutes):
+ *   1. read the channel, and check the owner put the verification code in its
+ *      description (owners only: nobody can build a page from someone else's channel)
+ *   2. pull captions in rounds, newest first, until there are TARGET_WORDS (30,000)
+ *      words of the creator talking, the channel runs out, or MAX_UPLOADS (200)
  *   3. keep only the creator: a vision check of each thumbnail against the avatar
  *      (skipped for faceless channels), AI-voice phrases, re-uploads
  *   4. draft the page (intro, topics, starter questions) from the channel itself
  *   5. tag every clip's topic with Jev, pick the featured clips, count the stats
- *   6. publish to /c/<slug>, as an unofficial preview until the owner claims it
+ *   6. publish to /c/<slug>, with the owner's own next-step link
  */
 import fs from "node:fs";
 import os from "node:os";
@@ -32,7 +34,9 @@ process.env.OPENROUTER_API_KEY = SECRET; // the proxy's bearer, not an OpenRoute
 const require = createRequire(import.meta.url);
 const { tagLanes } = require("../api/_jev.js");
 
-const N = +(process.env.PREVIEW_CLIPS || 60);
+const TARGET_WORDS = +(process.env.TARGET_WORDS || 30000);
+const MAX_UPLOADS = +(process.env.MAX_UPLOADS || 200);
+const ROUND = 60;
 const MODEL = process.env.WORKER_MODEL || "openai/gpt-6-luna";
 const POLL_MS = +(process.env.POLL_MS || 15000);
 const BUDGET = 150000;
@@ -71,7 +75,7 @@ function readChannel(url) {
   const d = JSON.parse(yt(["--flat-playlist", "--playlist-items", "1", "-J", url]));
   const thumbs = d.thumbnails || [];
   const avatar = (thumbs.find((t) => t.id === "avatar_uncropped") || thumbs.find((t) => /avatar/.test(t.id || "")) || {}).url || null;
-  return { name: d.channel || d.uploader || d.title, handle: d.uploader_id || null, channel_url: d.channel_url || url, description: (d.description || "").slice(0, 1500), avatar, followers: d.channel_follower_count || null };
+  return { name: d.channel || d.uploader || d.title, handle: d.uploader_id || null, channel_url: d.channel_url || url, description: (d.description || "").slice(0, 1500), description_full: d.description || "", avatar, followers: d.channel_follower_count || null };
 }
 
 function listTab(url, tab, n) {
@@ -82,12 +86,12 @@ function listTab(url, tab, n) {
 }
 
 /* ---------- 2. captions, in parallel ---------- */
-async function fetchCaptions(jobId, videos, dir) {
+async function fetchCaptions(jobId, videos, dir, wordsSoFar = 0) {
   const jobs = Math.min(6, videos.length);
-  let done = 0;
+  let done = -1;
   const timer = setInterval(() => {
     const have = new Set(fs.readdirSync(dir).filter((f) => f.endsWith(".json3")).map((f) => f.split(".")[0])).size;
-    if (have !== done) { done = have; progress(jobId, "captions", `Pulling your captions: ${have} of ${videos.length} videos`); }
+    if (have !== done) { done = have; progress(jobId, "captions", `Pulling your captions: about ${wordsSoFar.toLocaleString("en-US")} of ${TARGET_WORDS.toLocaleString("en-US")} words so far, ${have} of ${videos.length} videos in this round`); }
   }, 5000);
   await Promise.all(Array.from({ length: jobs }, (_, j) => new Promise((resolve) => {
     const mine = videos.filter((_, i) => i % jobs === j);
@@ -116,10 +120,9 @@ async function fetchCaptions(jobId, videos, dir) {
 /* ---------- 3. keep only the creator ---------- */
 const AI_VOICE = [/thanks? (you )?for calling/i, /how (can|may) i (help|assist) you( today)?\?/i, /you('ve| have) reached/i, /please leave (a|your) message/i];
 
-async function screen(jobId, channel, clips) {
+async function screen(jobId, channel, clips, notes, seen) {
   const kept = new Set(clips.map((c) => c.id));
-  const notes = { not_on_camera: 0, ai_voice: 0, duplicates: 0, faceless: false };
-  if (channel.avatar) {
+  if (channel.avatar && !notes.faceless) {
     progress(jobId, "screening", "Checking it's you on camera in each video");
     const onCam = new Set();
     for (let i = 0; i < clips.length; i += 15) {
@@ -134,10 +137,11 @@ async function screen(jobId, channel, clips) {
         for (const n of r.on_camera || []) if (batch[n - 1]) onCam.add(batch[n - 1].id);
       } catch (e) { for (const c of batch) onCam.add(c.id); } // can't check: keep, don't punish the creator for our error
     }
-    if (onCam.size < clips.length * 0.3) notes.faceless = true; // voiceover channel: the voice is still theirs
+    // Voiceover channel (decided on the first round): the voice is still theirs.
+    if (notes.rounds === 0 && onCam.size < clips.length * 0.3) notes.faceless = true;
     else for (const c of clips) if (!onCam.has(c.id)) { kept.delete(c.id); notes.not_on_camera++; }
   }
-  const seen = new Set();
+  notes.rounds++;
   for (const c of clips) {
     if (!kept.has(c.id)) continue;
     if (c.lines.some((l) => AI_VOICE.some((re) => re.test(l.text)))) { kept.delete(c.id); notes.ai_voice++; continue; }
@@ -145,7 +149,7 @@ async function screen(jobId, channel, clips) {
     if (seen.has(key)) { kept.delete(c.id); notes.duplicates++; continue; }
     seen.add(key);
   }
-  return { clips: clips.filter((c) => kept.has(c.id)), notes };
+  return clips.filter((c) => kept.has(c.id));
 }
 
 /* ---------- 4. draft the page from the channel itself ---------- */
@@ -177,24 +181,30 @@ async function draft(channel, clips) {
   return llm([{ type: "text", text: `You are setting up an "ask me" page for a YouTube creator, built only from their own videos. Write in plain, specific English: no hype, no buzzwords.\n\nChannel: ${channel.name} (${channel.handle || ""})\nDescription:\n${channel.description || "(none)"}\n\nRecent video titles:\n${titles}\n\nThe topics (lanes) must cover what these videos are actually about, so each video fits one.` }], schema, "page", 2500);
 }
 
-function assembleConfig(slug, channel, d, notes) {
+function assembleConfig(job, channel, d, notes) {
+  const slug = job.slug;
   const hash = [...slug].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
   const lanes = {};
   for (const l of d.lanes) { const id = String(l.id).toLowerCase().replace(/[^a-z0-9_]+/g, "_").slice(0, 30) || `topic_${Object.keys(lanes).length}`; lanes[id] = { label: l.label, when: l.when }; }
   const watch = { label: `Watch ${d.short_name} on YouTube`, url: channel.channel_url };
+  const offer = null; // previews never link anywhere but the creator's own channel
+  const main = watch;
   return {
     slug, name: channel.name, short_name: d.short_name, brand: `Ask ${d.short_name}`, tagline: d.tagline,
     about: d.about, audience: d.audience, channels: [channel.channel_url], speaker: "interview",
+    // A build is a preview until the owner claims it (api/claim.js swaps in their offer).
     preview: { unofficial: true, channel_url: channel.channel_url, faceless: notes.faceless },
-    known_facts: [], rules: [`This is an unofficial page built from ${channel.name}'s public videos. Never claim to represent ${channel.name}, never offer their products or services, and never quote prices.`],
+    known_facts: [],
+    rules: [`This page was built from ${channel.name}'s public videos and is not run by them yet. Never claim to represent ${channel.name}, never offer their products or services, and never quote a price.`],
     hero: { eyebrow: d.tagline, headline: `${d.headline}`, prompt: d.prompt, placeholder: d.placeholder, button: "Get my answer" },
     chips: d.chips,
     proof: [],
     featured_heading: `${d.short_name} already answered most of this, out loud.`,
     featured_blurb: `Real videos from ${channel.name}. Ask a question above and we'll take you to the second they talk about your situation.`,
-    offer: { name: `More from ${d.short_name}`, description: `Their YouTube channel.`, url: channel.channel_url, cta_label: watch.label, header_label: "Their channel", sticky_label: watch.label, brief_cta: watch.label, note: "Unofficial preview built from public videos", sheet_heading: `Want more from ${d.short_name}?`, no_moment: `Their channel has more.`, fallback: `Their channel has more videos.`, popup_after_seconds: 30, form: { submit_label: "Save", success: "Saved." } },
+    offer: { name: main.label, description: offer ? `${d.short_name}'s next step for visitors.` : `${d.short_name}'s YouTube channel.`, url: main.url, cta_label: main.label, header_label: main.label, sticky_label: main.label, brief_cta: main.label, note: "", sheet_heading: `Want more from ${d.short_name}?`, no_moment: offer ? `${main.label} is the next step.` : `Their channel has more.`, fallback: `${main.label}.`, popup_after_seconds: 30, form: { submit_label: "Save", success: "Saved." } },
     cards: [],
-    jev: { lanes, moves: { watch }, default_move: "watch", routes: {}, ask_lane: "Which is this closest to?", ask_intent: "What would help next?", intent_labels: { asking: "Just learning", own_problem: "Fixing my own problem", evaluating: "Comparing options", wants_creator: `Hearing from ${d.short_name}` } },
+    jev: { lanes, moves: offer ? { offer, watch } : { watch }, default_move: offer ? "offer" : "watch",
+      routes: offer ? { asking: { "*": "watch" }, own_problem: { "*": "offer" }, evaluating: { "*": "offer" }, wants_creator: { "*": "offer" } } : {}, ask_lane: "Which is this closest to?", ask_intent: "What would help next?", intent_labels: { asking: "Just learning", own_problem: "Fixing my own problem", evaluating: "Comparing options", wants_creator: `Hearing from ${d.short_name}` } },
     intake: { fields: [
       { key: "goal", label: "Goal", description: "What they want to happen, in their words." },
       { key: "stuck_on", label: "Stuck on", description: "The problem or blocker they described." },
@@ -202,7 +212,7 @@ function assembleConfig(slug, channel, d, notes) {
     ] },
     disclaimer: `Unofficial preview built from ${channel.name}'s public YouTube videos; not affiliated with or endorsed by them. Answers are written by an AI; quotes are shown exactly as captioned and play from the second they were said.`,
     footer: `Built from public videos. Is this your channel? Claim this page.`,
-    powered_by: { label: "Is this your channel? Claim this page, or build one for yours", url: "/for-creators", book_url: process.env.CLAIM_URL || "/for-creators" },
+    powered_by: { label: `Is this ${channel.name}'s channel? Claim this page`, url: `/claim?c=${slug}`, book_url: "/new" },
     theme: PALETTES[hash % PALETTES.length],
     built_at: new Date().toISOString(),
   };
@@ -229,22 +239,42 @@ async function build(job) {
   try {
     await progress(job.id, "channel", "Reading your channel");
     const channel = readChannel(job.channel);
-    await progress(job.id, "channel", `Found ${channel.name}`, { name: channel.name });
+    if (job.code && !channel.description_full.includes(job.code)) {
+      throw new Error(`We couldn't find ${job.code} in ${channel.name}'s channel description yet. Add it, save, wait a minute for YouTube to update, then try again.`);
+    }
+    await progress(job.id, "channel", `Found ${channel.name}, and the code checks out`, { name: channel.name });
 
-    const shorts = listTab(job.channel, "shorts", Math.ceil(N * 0.75));
-    const longs = listTab(job.channel, "videos", N - Math.min(shorts.length, Math.ceil(N * 0.75)));
-    const videos = [...shorts, ...longs].slice(0, N);
+    // Newest first, about one long video for every three shorts.
+    const shorts = listTab(job.channel, "shorts", Math.ceil(MAX_UPLOADS * 0.7));
+    const longs = listTab(job.channel, "videos", Math.ceil(MAX_UPLOADS * 0.5));
+    const videos = [];
+    for (let i = 0, j = 0; videos.length < MAX_UPLOADS && (i < shorts.length || j < longs.length);) {
+      if (j < longs.length && (videos.length % 4 === 0 || i >= shorts.length)) videos.push(longs[j++]);
+      else if (i < shorts.length) videos.push(shorts[i++]);
+    }
     if (!videos.length) throw new Error("This channel has no public videos we can read.");
-    await progress(job.id, "captions", `Pulling your captions: 0 of ${videos.length} videos`);
-    const clips = await fetchCaptions(job.id, videos, dir);
-    if (clips.length < 5) throw new Error(`Only ${clips.length} of ${videos.length} videos have English captions, which isn't enough to build a page yet.`);
 
-    const { clips: yours, notes } = await screen(job.id, channel, clips);
+    const notes = { not_on_camera: 0, ai_voice: 0, duplicates: 0, faceless: false, rounds: 0 };
+    const seen = new Set();
+    const yours = [];
+    let captioned = 0, looked = 0, words = 0;
+    const wordsOf = (c) => c.lines.filter((l) => l.who !== "other").reduce((a, l) => a + l.text.split(/\s+/).length, 0);
+    for (let i = 0; i < videos.length && words < TARGET_WORDS; i += ROUND) {
+      const round = videos.slice(i, i + ROUND);
+      looked += round.length;
+      const roundDir = fs.mkdtempSync(path.join(dir, "r-"));
+      const clips = await fetchCaptions(job.id, round, roundDir, words);
+      captioned += clips.length;
+      if (clips.length) await progress(job.id, "screening", `Checking it's you on camera in ${clips.length} more videos`);
+      for (const c of await screen(job.id, channel, clips, notes, seen)) { yours.push(c); words += wordsOf(c); }
+      await progress(job.id, "captions", `Pulling your captions: ${words.toLocaleString("en-US")} of ${TARGET_WORDS.toLocaleString("en-US")} words from ${yours.length} videos`);
+    }
+    if (captioned < 5) throw new Error(`Only ${captioned} of ${looked} videos have English captions, which isn't enough to build a page yet.`);
     if (yours.length < 5) throw new Error("We couldn't find enough videos where you're the one talking.");
 
     await progress(job.id, "drafting", "Writing your page's intro and topics");
     const d = await draft(channel, yours);
-    const config = assembleConfig(job.slug, channel, d, notes);
+    const config = assembleConfig(job, channel, d, notes);
     const corpus = corpusOf(config, yours);
 
     await progress(job.id, "topics", `Sorting ${corpus.clips.length} clips by topic`);
@@ -261,7 +291,7 @@ async function build(job) {
     const lanes = {};
     for (const c of corpus.clips) lanes[c.lane || "other"] = (lanes[c.lane || "other"] || 0) + 1;
     const stats = {
-      creator: config.name, uploads_looked_at: videos.length, with_captions: clips.length,
+      creator: config.name, uploads_on_channel: null, uploads_looked_at: looked, with_captions: captioned,
       cut_not_on_camera: notes.not_on_camera, cut_ai_voice: notes.ai_voice, cut_duplicates: notes.duplicates, faceless: notes.faceless,
       clips: corpus.clips.length,
       words: corpus.clips.reduce((a, c) => a + c.lines.filter((l) => l.who !== "other").reduce((b, l) => b + l.text.split(/\s+/).length, 0), 0),
@@ -277,6 +307,17 @@ async function build(job) {
   }
 }
 
+/* ---------- claim: does the code sit in the channel description? ---------- */
+async function verifyClaim(job) {
+  await progress(job.id, "checking", "Reading your channel description");
+  const channel = readChannel(job.channel);
+  if (!channel.description_full.includes(job.code)) {
+    throw new Error(`We couldn't find ${job.code} in ${channel.name}'s channel description. Add it anywhere in the description, save, wait a minute for YouTube to update, then try again.`);
+  }
+  await api("/api/worker?a=verified", { id: job.id, name: channel.name });
+  console.log(`verified claim for ${job.slug}`);
+}
+
 /* ---------- the loop ---------- */
 const once = process.argv.includes("--once");
 for (;;) {
@@ -284,7 +325,7 @@ for (;;) {
   try { job = await api("/api/worker?a=next"); } catch (e) { console.warn("poll:", e.message); }
   if (job && job.id) {
     console.log(`building ${job.channel} (${job.id})`);
-    try { await build(job); } catch (e) { console.warn(`failed ${job.id}:`, e.message); await api("/api/worker?a=fail", { id: job.id, error: e.message }).catch(() => {}); }
+    try { await (job.type === "claim" ? verifyClaim(job) : build(job)); } catch (e) { console.warn(`failed ${job.id}:`, e.message); await api("/api/worker?a=fail", { id: job.id, error: e.message }).catch(() => {}); }
     continue;
   }
   if (once) break;

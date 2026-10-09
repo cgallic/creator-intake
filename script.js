@@ -98,7 +98,7 @@ function applyConfig() {
   if (C.preview && C.preview.unofficial) {
     const b = document.createElement("div");
     b.className = "preview-banner";
-    b.innerHTML = `Unofficial preview built from ${esc(C.name)}'s public videos. Not affiliated with ${esc(C.name)}. <a href="${esc(appLink("/for-creators"))}">Is this your channel? Claim it</a>`;
+    b.innerHTML = `Unofficial preview built from ${esc(C.name)}'s public videos. Not affiliated with ${esc(C.name)}. <a href="${esc(appLink(`/claim?c=${C.slug}`))}">Is this your channel? Claim it</a>`;
     document.body.prepend(b);
   }
   document.body.classList.remove("booting");
@@ -172,6 +172,14 @@ async function runAsk(raw) {
   let i = 0;
   const ticker = setInterval(() => { const el = $("#think-text"); if (el && i < THINKING.length - 1) el.textContent = THINKING[++i]; }, 2600);
 
+  // Clips first: the matching clip usually lands in about a second; show it while the answer is written.
+  let early = [];
+  fetch("./api/quick", { method: "POST", headers: { "content-type": "application/json", "x-visitor": VISITOR }, body: JSON.stringify({ q: raw }) })
+    .then((r) => r.json()).then((d) => {
+      early = (d && d.moments) || [];
+      if (seq === askSeq && !current && early.length) renderEarly(raw, early[0]);
+    }).catch(() => {});
+
   let data = null, error = null;
   try {
     const r = await fetch("./api/answer", { method: "POST", headers: { "content-type": "application/json", "x-visitor": VISITOR }, body: JSON.stringify({ q: raw, history: ev.history, did: ev.did, told: ev.told, came_from: cameFrom }) });
@@ -184,9 +192,29 @@ async function runAsk(raw) {
   if (seq !== askSeq) return;
 
   if (error) return renderError(raw, error);
+  // If the writer found no quote but the quick search did, keep the clip already on screen.
+  if (!(data.moments || []).length && early.length) {
+    data.moments = early.slice(0, 1);
+    data.components = (data.components || []).map((c) => (c.type === "no_moment" ? { type: "moment", column: "main", moment: early[0] } : c));
+  }
   current = { raw, data };
   ev.history.push(raw); ev.did = []; saveEv();
   renderAnswer(raw, data);
+}
+
+/* The clip, on screen before the written answer: the thinking line stays, the clip card replaces its skeleton. */
+function renderEarly(raw, m) {
+  const slot = answer.querySelector(".answer-grid .col .panel.d2");
+  if (!slot) return;
+  slot.outerHTML = leadMoment(m);
+  const card = answer.querySelector("[data-moment='0']");
+  if (card) {
+    const open = () => { openVideo(m); did(`opened clip: ${m.title}`); };
+    card.addEventListener("click", (e) => { if (!e.target.closest("a")) open(); });
+    card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+  }
+  const t = $("#think-text");
+  if (t) t.textContent = `Here's where ${WHO} talks about it. Writing the full answer…`;
 }
 
 function echo(raw) {

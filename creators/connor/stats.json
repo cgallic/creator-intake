@@ -4,10 +4,10 @@
  "uploads_looked_at": 700,
  "with_captions": 642,
  "cut_not_on_camera": 57,
- "cut_ai_voice": 4,
+ "cut_ai_voice": 5,
  "cut_duplicates": 33,
- "clips": 548,
- "words": 81463,
+ "clips": 547,
+ "words": 81363,
  "hours": 8.2,
  "lanes": [
   {
@@ -23,7 +23,7 @@
   {
    "id": "kaicalls",
    "label": "KaiCalls itself",
-   "n": 72
+   "n": 71
   },
   {
    "id": "missed_calls",

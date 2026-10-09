@@ -29,7 +29,11 @@ module.exports = async (req, res) => {
   };
   if (!lead.contact) return res.status(400).json({ error: "Add an email or phone so we can reach you." });
 
-  const url = process.env.LEAD_WEBHOOK_URL;
+  // A claimed page sends leads to its owner's webhook (kept out of the public config);
+  // the deploy's own page uses LEAD_WEBHOOK_URL.
+  const slug = req.query && req.query.c;
+  const priv = slug ? await require("./_store").getJSON(`creators/${slug}/private.json`).catch(() => null) : null;
+  const url = slug ? priv && priv.webhook : process.env.LEAD_WEBHOOK_URL;
   if (!url) { console.warn("lead: LEAD_WEBHOOK_URL not set, not sent", lead.creator); return res.status(200).json({ sent: false }); }
   try {
     const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(lead) });

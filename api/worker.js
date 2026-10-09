@@ -5,9 +5,10 @@
  *   GET  ?a=next                      oldest queued job (claims it), or {}
  *   POST ?a=progress  {id, stage, detail}
  *   POST ?a=publish   {id, slug, files: {config, corpus, featured, stats}}
+ *   POST ?a=verified  {id, name}          a claim's code was found in the channel description
  *   POST ?a=fail      {id, error}
  *
- * A job claimed more than 30 minutes ago and not finished goes back in the queue.
+ * A job picked up more than 30 minutes ago and not finished goes back in the queue.
  */
 const store = require("./_store");
 const { SLUG } = require("./_creator");
@@ -33,8 +34,8 @@ module.exports = async (req, res) => {
       for (const bl of blobs) {
         const job = await store.getJSON(bl.pathname);
         if (!job) continue;
-        const stale = (job.status === "claimed" || job.status === "building") && Date.now() - Date.parse(job.updated_at) > 30 * 60e3;
-        if (job.status === "queued" || stale) return res.status(200).json(await update(job.id, { status: "claimed", stage: "starting", detail: "A builder picked this up" }));
+        const stale = (job.status === "working" || job.status === "building") && Date.now() - Date.parse(job.updated_at) > 30 * 60e3;
+        if (job.status === "queued" || stale) return res.status(200).json(await update(job.id, { status: "working", stage: job.type === "claim" ? "checking" : "starting", detail: job.type === "claim" ? "Reading your channel description" : "A builder picked this up" }));
       }
       return res.status(200).json({});
     }
@@ -50,6 +51,10 @@ module.exports = async (req, res) => {
       for (const name of ["config", "corpus", "featured", "stats"]) if (b.files[name]) await store.putJSON(`creators/${slug}/${name}.json`, b.files[name]);
       await update(String(b.id), { status: "done", stage: "done", detail: "Your page is ready", url: `/c/${slug}` });
       return res.status(200).json({ ok: true, url: `/c/${slug}` });
+    }
+    if (a === "verified" && req.method === "POST") {
+      await update(String(b.id), { status: "verified", stage: "verified", detail: "The code checks out", name: b.name ? String(b.name).slice(0, 120) : undefined });
+      return res.status(200).json({ ok: true });
     }
     if (a === "fail" && req.method === "POST") {
       await update(String(b.id), { status: "failed", stage: "failed", error: String(b.error || "The build failed.").slice(0, 300) });

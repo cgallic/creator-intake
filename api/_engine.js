@@ -186,6 +186,50 @@ function build(config, corpus) {
   }
   const railItem = (c) => ({ source_id: c.id, title: c.title, youtube_id: c.youtube_id, seconds: c.seconds, thumb: c.thumb, vertical: !!c.vertical, published: c.published, links: c.links || [], t: 0, url: c.url });
 
+  /* Clips first: a word search over the creator's own caption lines, so the right clip
+     can play in about a second while the writer drafts the answer. Each window is one
+     or two consecutive lines of the creator talking, so its text is a verbatim quote. */
+  const stem = (w) => w.replace(/(ing|ed|es|s)$/, "");
+  const terms = (t) => (String(t).toLowerCase().match(/[a-z0-9']{3,}/g) || []).filter((w) => !STOP.has(w)).map(stem);
+  let WINDOWS = null;
+  const DF = new Map();
+  function windows() {
+    if (WINDOWS) return WINDOWS;
+    WINDOWS = [];
+    for (const c of corpus.clips) {
+      const titleT = new Set(terms(c.title));
+      for (let i = 0; i < c.lines.length; i++) {
+        const a = c.lines[i], b = c.lines[i + 1];
+        if (a.who === "other") continue;
+        const text = b && b.who !== "other" ? `${a.text} ${b.text}` : a.text;
+        if (text.split(/\s+/).length < 10) continue;
+        const set = new Set(terms(text));
+        WINDOWS.push({ clip: c, t: a.t, text, set, titleT });
+        for (const w of set) DF.set(w, (DF.get(w) || 0) + 1);
+      }
+    }
+    return WINDOWS;
+  }
+  function quickCandidates(q, n = 12) {
+    const W = windows(), N = W.length || 1, want = [...new Set(terms(q))];
+    const idf = (w) => Math.log(1 + N / (1 + (DF.get(w) || 0)));
+    const scored = [];
+    for (const w of W) {
+      let sc = 0;
+      for (const x of want) { if (w.set.has(x)) sc += idf(x); if (w.titleT.has(x)) sc += 0.5 * idf(x); }
+      if (sc > 0) scored.push({ w, sc });
+    }
+    scored.sort((a, b) => b.sc - a.sc);
+    const out = [], seen = new Set();
+    for (const { w } of scored) {
+      if (seen.has(w.clip.id)) continue;
+      seen.add(w.clip.id);
+      out.push({ source_id: w.clip.id, title: w.clip.title, quote: w.text.split(/\s+/).slice(0, 45).join(" ") });
+      if (out.length >= n) break;
+    }
+    return out;
+  }
+
   /* The response is a component list (A2UI-style). Jev's read decides the layout; the
      LLM's text fills it; config.cards are the creator's fixed cards. */
   function compose(p, moments, rail, m) {
@@ -204,7 +248,7 @@ function build(config, corpus) {
   const fallback = () => `We couldn't answer that here. ${config.offer.fallback || ""}`.trim();
   const jevOn = () => !!(process.env.OPENROUTER_API_KEY && process.env.JEV_OFF !== "1" && config.jev);
 
-  return { config, corpus, WHO, SCHEMA, INSTRUCTIONS, ask, verifyMoment, shapeMoment, railCandidates, railItem, compose, fallback, jevOn };
+  return { config, corpus, WHO, SCHEMA, INSTRUCTIONS, ask, verifyMoment, shapeMoment, railCandidates, railItem, quickCandidates, compose, fallback, jevOn };
 }
 
 module.exports = { build, guard, jev };
