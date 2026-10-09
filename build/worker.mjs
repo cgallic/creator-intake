@@ -72,7 +72,9 @@ const yt = (args) => execFileSync("yt-dlp", args, { encoding: "utf8", maxBuffer:
 
 /* ---------- 1. the channel ---------- */
 function readChannel(url) {
-  const d = JSON.parse(yt(["--flat-playlist", "--playlist-items", "1", "-J", url]));
+  let d;
+  try { d = JSON.parse(yt(["--flat-playlist", "--playlist-items", "1", "-J", url])); }
+  catch (_) { throw new Error("We couldn't find that channel on YouTube. Check the link or @handle and try again."); }
   const thumbs = d.thumbnails || [];
   const avatar = (thumbs.find((t) => t.id === "avatar_uncropped") || thumbs.find((t) => /avatar/.test(t.id || "")) || {}).url || null;
   return { name: d.channel || d.uploader || d.title, handle: d.uploader_id || null, channel_url: d.channel_url || url, description: (d.description || "").slice(0, 1500), description_full: d.description || "", avatar, followers: d.channel_follower_count || null };
