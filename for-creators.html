@@ -560,7 +560,7 @@
             stats.with_captions && [`${fmt(stats.with_captions)} have captions`, stats.with_captions, ""],
             stats.cut_not_on_camera && [`${fmt(stats.cut_not_on_camera)} cut: not you on camera`, stats.cut_not_on_camera, "cut"],
             stats.cut_ai_voice && [`${fmt(stats.cut_ai_voice)} cut: an AI voice talking`, stats.cut_ai_voice, "cut"],
-            stats.cut_duplicates && [`${fmt(stats.cut_duplicates)} cut: uploaded twice`, stats.cut_duplicates, "cut"],
+            stats.cut_duplicates && [`${fmt(stats.cut_duplicates)} cut: re-uploads or no speech`, stats.cut_duplicates, "cut"],
           ].filter(Boolean);
           $("#funnel").innerHTML = rows.map(([label, n, cls]) => `<div class="fbar ${cls}" style="width:${w(n)}">${esc(label)}</div>`).join("") +
             `<div class="fbar final" style="width:${w(stats.clips)}">${fmt(stats.clips)} clips of you<small>${fmt(stats.words)} words, ${stats.hours} hours</small></div>`;
