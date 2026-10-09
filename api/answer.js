@@ -14,7 +14,6 @@
  * Everything creator-specific comes from data/config.json (see
  * creators/_template/config.json).
  */
-const Anthropic = require("@anthropic-ai/sdk");
 const config = require("../data/config.json");
 const corpus = require("../data/corpus.json");
 
@@ -106,26 +105,68 @@ function shapeMoment(m, v) {
 }
 
 /* ---------- handler ---------- */
+// Two backends, picked by which key is set. OpenRouter (default model: Claude Haiku
+// 5.5, ~$0.10/M input, $0.01/M cached) is the cheap path; ANTHROPIC_API_KEY alone
+// uses Opus directly. ANSWER_MODEL overrides the model on either.
+const RECORD = `<record creator="${config.name}">
+${CORPUS_TEXT}
+</record>`;
+const USER = (q) => `What they told us, in their words:
+<said>${q}</said>`;
 let client = null;
 
-async function ask(q) {
-  client = client || new Anthropic();
+async function askOpenRouter(q) {
+  const model = process.env.ANSWER_MODEL || "anthropic/claude-haiku-5.5";
+  const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      "content-type": "application/json",
+      "http-referer": config.canonical_url || "https://github.com/cgallic/creator-intake",
+      "x-title": `Ask ${WHO}`,
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 4000,
+      messages: [
+        { role: "system", content: [
+          { type: "text", text: INSTRUCTIONS },
+          { type: "text", text: RECORD, cache_control: { type: "ephemeral" } },
+        ] },
+        { role: "user", content: USER(q) },
+      ],
+      response_format: { type: "json_schema", json_schema: { name: "answer", strict: true, schema: SCHEMA } },
+      usage: { include: true },
+    }),
+  });
+  const d = await r.json();
+  if (!r.ok || d.error) throw new Error(`openrouter ${r.status}: ${JSON.stringify(d.error || d).slice(0, 300)}`);
+  const choice = d.choices?.[0];
+  if (choice?.finish_reason === "content_filter") return { refusal: true };
+  const text = String(choice?.message?.content || "").replace(/^```(?:json)?\s*|\s*```$/g, "");
+  return { parsed: JSON.parse(text), usage: { cache_read_input_tokens: d.usage?.prompt_tokens_details?.cached_tokens ?? null, cost: d.usage?.cost ?? null }, model: d.model };
+}
+
+async function askAnthropic(q) {
+  client = client || new (require("@anthropic-ai/sdk"))();
   const response = await client.beta.messages.create({
-    model: MODEL,
+    model: process.env.ANSWER_MODEL || MODEL,
     max_tokens: 8000,
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
     output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
     system: [
       { type: "text", text: INSTRUCTIONS },
-      { type: "text", text: `<record creator="${config.name}">\n${CORPUS_TEXT}\n</record>`, cache_control: { type: "ephemeral", ttl: "1h" } },
+      { type: "text", text: RECORD, cache_control: { type: "ephemeral", ttl: "1h" } },
     ],
-    messages: [{ role: "user", content: `What they told us, in their words:\n<said>${q}</said>` }],
+    messages: [{ role: "user", content: USER(q) }],
   });
   if (response.stop_reason === "refusal") return { refusal: true };
   const text = response.content.filter((b) => b.type === "text").map((b) => b.text).join("");
   return { parsed: JSON.parse(text), usage: response.usage, model: response.model };
 }
+
+const ask = (q) => (process.env.OPENROUTER_API_KEY ? askOpenRouter(q) : askAnthropic(q));
 
 // Best-effort, per function instance. A visitor is the page's random visitor id
 // (x-visitor), falling back to IP: behind a proxy rewrite (e.g. connorgallic.com/ask)
@@ -172,6 +213,7 @@ module.exports = async (req, res) => {
       followups: p.followups,
       model: out.model,
       cache_read_tokens: out.usage?.cache_read_input_tokens ?? null,
+      cost: out.usage?.cost ?? null,
     });
   } catch (e) {
     console.error("answer error:", e && e.message);

@@ -63,8 +63,8 @@ every field. The important ones are:
   uploads, each with the second it starts at. Uploads are taken newest first, up to
   `corpus_token_budget` (150k tokens by default), so the whole corpus fits in one
   cached prompt.
-- **`api/answer.js`** puts the corpus in a cached system block (1h TTL) and asks
-  `claude-opus-5-5` (effort `low`, structured output) for an answer, moments, facts
+- **`api/answer.js`** puts the corpus in a cached system block and asks the model
+  (OpenRouter → Claude Haiku 5.5 by default, or Opus direct; structured output) for an answer, moments, facts
   and follow-ups. Each moment is a source id plus a passage. **`api/_verify.js`**
   keeps it only if the passage appears word for word inside one unbroken run of the
   creator's lines, and takes the start second from there. Anything else is dropped.
@@ -96,15 +96,18 @@ The page notices it is under `/ask` and resolves its assets and API calls there.
 
 | Var | |
 |---|---|
-| `ANTHROPIC_API_KEY` | required |
+| `OPENROUTER_API_KEY` | the cheap path, used when set. Default model `anthropic/claude-haiku-5.5` |
+| `ANTHROPIC_API_KEY` | used when no OpenRouter key: `claude-opus-5-5` direct |
+| `ANSWER_MODEL` | overrides the model on either backend |
 | `LEAD_WEBHOOK_URL` | where leads go; optional |
 | `ANSWER_LIMIT_PER_HOUR` | questions per visitor per hour, per function instance (default 30) |
 | `ANSWER_CAP_PER_HOUR` | questions across all visitors per hour, per function instance (default 300): the spend guard |
 
 ## Cost, speed, limits
 
-Each question costs about $0.05 and takes 10–17 s: a cache read of the corpus plus
-about 1.5k output tokens. The rate limits are best effort only. Before a big public
+With Haiku 5.5 on OpenRouter, a question costs about $0.002 once the corpus is
+cached and about $0.015 when it isn't (~140k input tokens plus ~1.5k output). Opus
+direct costs about $0.05–0.07. The response includes `cost` when OpenRouter reports it. The rate limits are best effort only. Before a big public
 push, add a Vercel Firewall rate-limit rule on `/api/answer`.
 
 YouTube captions are auto-generated, so a quote is exactly what the captions say,
