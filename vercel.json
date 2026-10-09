@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "functions": {
+    "api/answer.js": { "maxDuration": 60 },
+    "api/lead.js": { "maxDuration": 15 }
+  },
+  "headers": [
+    { "source": "/data/corpus.json", "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }] }
+  ]
+}

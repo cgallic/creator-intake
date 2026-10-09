@@ -1,0 +1,142 @@
+#!/usr/bin/env node
+/**
+ * node build/index.mjs <slug>
+ *
+ * Builds creators/<slug>/corpus.json: everything the creator has said on their
+ * own YouTube channels that the intake may quote, line by line, each line with
+ * the second it starts at. Nothing in it is written by us or by a model.
+ *
+ * Speaker attribution: YouTube captions mark a change of speaker with ">>". In a
+ * clip with markers, a segment whose last sentence is a question is someone else
+ * asking (an interviewer or a guest) and is kept as context but never quotable;
+ * every other segment is the creator. A clip with no markers is the creator
+ * alone. config.speaker = "solo" skips the heuristic entirely (every line is the
+ * creator), for channels where nobody else ever speaks.
+ *
+ * The corpus is capped at config.corpus_token_budget (default 150k tokens),
+ * newest videos first, so the whole thing fits one cached prompt.
+ */
+import fs from "node:fs";
+import path from "node:path";
+import { creatorDir, loadConfig } from "./config.mjs";
+
+const slug = process.argv[2];
+const config = loadConfig(slug);
+const dir = creatorDir(slug);
+const capDir = path.join(dir, "captions");
+const BUDGET = config.corpus_token_budget || 150000;
+const tokens = (s) => Math.ceil(s.split(/\s+/).length * 1.35);
+
+function captionLines(json3, soloOnly) {
+  const events = (json3.events || []).filter((e) => e.segs && e.segs.some((s) => (s.utf8 || "").trim()));
+  const segments = [];
+  let seg = null;
+  for (const e of events) {
+    const t = Math.floor((e.tStartMs || 0) / 1000);
+    const parts = e.segs.map((s) => s.utf8 || "").join("").replace(/\s+/g, " ").split(">>");
+    parts.forEach((part, i) => {
+      if (i > 0 || !seg) { seg = { pieces: [] }; segments.push(seg); }
+      const text = part.trim();
+      if (text) seg.pieces.push({ t, text });
+    });
+  }
+  const lines = [];
+  for (const sg of segments.filter((x) => x.pieces.length)) {
+    const whole = sg.pieces.map((p) => p.text).join(" ").trim();
+    const who = !soloOnly && segments.length > 1 && /\?["”']?$/.test(whole) ? "other" : "creator";
+    let cur = null;
+    for (const p of sg.pieces) {
+      if (!cur || p.t - cur.t >= 8 || (/[.?!]$/.test(cur.text) && p.t - cur.t >= 4)) { cur = { t: p.t, who, text: p.text }; lines.push(cur); }
+      else cur.text += " " + p.text;
+    }
+  }
+  return lines.map((l) => ({ ...l, text: l.text.replace(/\s+/g, " ").trim() })).filter((l) => l.text);
+}
+
+function readTsv(file, cols) {
+  if (!fs.existsSync(file)) return new Map();
+  const m = new Map();
+  for (const row of fs.readFileSync(file, "utf8").split("\n")) {
+    const parts = row.split("\t");
+    if (parts[0]) m.set(parts[0], Object.fromEntries(cols.map((c, i) => [c, parts[i]])));
+  }
+  return m;
+}
+
+/* Optional creators/<slug>/crosspost.json: { "<youtube id>": [{ "network": "instagram", "url": "..." }] }
+   for clips also posted elsewhere. No entry = YouTube only, never a guess. */
+const crosspost = fs.existsSync(path.join(dir, "crosspost.json")) ? JSON.parse(fs.readFileSync(path.join(dir, "crosspost.json"), "utf8")) : {};
+const exclude = new Set(config.exclude_video_ids || []);
+
+const listing = readTsv(path.join(capDir, "listing.tsv"), ["id", "title", "duration", "url", "tab"]);
+const meta = new Map();
+for (const f of fs.existsSync(capDir) ? fs.readdirSync(capDir).filter((f) => /^meta(\.\d+)?\.tsv$/.test(f)) : []) {
+  for (const [k, v] of readTsv(path.join(capDir, f), ["id", "title", "duration", "date", "url"])) meta.set(k, v);
+}
+const files = fs.existsSync(capDir) ? fs.readdirSync(capDir).filter((f) => f.endsWith(".json3")) : [];
+
+const videos = [], missing = [];
+for (const [id, l] of listing) {
+  if (exclude.has(id)) continue;
+  const m = meta.get(id) || {};
+  // Prefer a human caption track ("en") over auto-captions ("en-orig", "en-en", ...).
+  const cand = files.filter((f) => f.startsWith(id + ".")).sort((a, b) => a.length - b.length);
+  const lines = cand.length ? captionLines(JSON.parse(fs.readFileSync(path.join(capDir, cand[0]), "utf8")), config.speaker === "solo") : [];
+  const title = m.title || l.title;
+  if (!lines.length || !title) { missing.push(id); continue; }
+  const date = m.date && /^\d{8}$/.test(m.date) ? `${m.date.slice(0, 4)}-${m.date.slice(4, 6)}-${m.date.slice(6, 8)}` : null;
+  videos.push({
+    youtube_id: id,
+    title,
+    seconds: +(m.duration || l.duration) || null,
+    published: date,
+    vertical: l.tab === "shorts",
+    thumb: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+    url: l.url,
+    links: [{ network: "youtube", url: l.url }, ...(crosspost[id] || [])],
+    lines,
+  });
+}
+
+// Newest first, then fill the token budget.
+videos.sort((a, b) => String(b.published || "").localeCompare(String(a.published || "")));
+const clips = [], overBudget = [];
+let used = 0;
+for (const v of videos) {
+  const cost = tokens(v.lines.map((l) => l.text).join(" ")) + 40;
+  if (used + cost > BUDGET) { overBudget.push(v.youtube_id); continue; }
+  used += cost;
+  clips.push({ id: "c" + String(clips.length + 1).padStart(3, "0"), ...v });
+}
+
+const corpus = {
+  creator: config.name,
+  slug,
+  channels: config.channels,
+  built_at: new Date().toISOString(),
+  sources: "YouTube captions of the creator's own public uploads (yt-dlp), newest first within the token budget",
+  clips,
+};
+fs.writeFileSync(path.join(dir, "corpus.json"), JSON.stringify(corpus));
+
+// Homepage grid: config.featured_ids if set, otherwise the newest clips with a usable title.
+const pick = config.featured_ids?.length
+  ? config.featured_ids.map((id) => clips.find((c) => c.youtube_id === id)).filter(Boolean)
+  : clips.filter((c) => c.title.length > 12 && c.title.length < 110).slice(0, 6);
+fs.writeFileSync(path.join(dir, "featured.json"), JSON.stringify({
+  clips: pick.slice(0, 6).map((c) => ({ title: c.title, seconds: c.seconds, thumb: c.thumb, published: c.published, ask: c.title })),
+}));
+
+const words = (s) => s.split(/\s+/).length;
+console.log(JSON.stringify({
+  creator: config.name,
+  videos_listed: listing.size,
+  clips: clips.length,
+  est_tokens: used,
+  budget: BUDGET,
+  dropped_over_budget: overBudget.length,
+  missing_captions: missing.length,
+  words_creator: clips.reduce((a, c) => a + c.lines.filter((l) => l.who === "creator").reduce((b, l) => b + words(l.text), 0), 0),
+  clips_with_other_speakers: clips.filter((c) => c.lines.some((l) => l.who === "other")).length,
+  newest: clips[0]?.published, oldest: clips.at(-1)?.published,
+}, null, 1));

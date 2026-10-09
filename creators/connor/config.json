@@ -1,0 +1,78 @@
+{
+  "slug": "connor",
+  "name": "Connor Gallic",
+  "short_name": "Connor",
+  "brand": "Ask Connor",
+  "tagline": "Connor Gallic · founder, KaiCalls",
+  "about": "Connor Gallic is a founder in Puerto Rico who builds AI automation for small businesses and runs KaiCalls, an AI secretary that answers a business's phone, takes messages and books jobs. He posts short videos almost daily about building with AI agents, running a one-person software company, and what actually works for getting customers.",
+  "audience": "Business owners, operators and builders who watched Connor's videos and want help with their own situation: missed calls, automating their business with AI, building software with AI agents, or getting their first customers.",
+  "channels": ["https://www.youtube.com/@connorgallic", "https://www.youtube.com/@buildwithkai"],
+  "speaker": "interview",
+  "max_videos": 700,
+  "corpus_token_budget": 150000,
+  "known_facts": [
+    "Connor founded KaiCalls (kaicalls.com), an AI secretary for small businesses. Call it a secretary, never a bot or 'voice AI'.",
+    "KaiCalls plans: Backup $10/mo, Kai Line $79/mo, Office $349/mo. Every plan includes a phone number. 30-day refund.",
+    "Anyone can try KaiCalls at kaicalls.com/start, or call the demo line at 417-835-0402.",
+    "Connor takes 30-minute calls through his booking link on this page."
+  ],
+  "rules": [
+    "Never claim Connor has worked with them, will build something for them, or guarantees a result.",
+    "Recommend KaiCalls only when their situation is about answering calls, missed calls or front-desk work, and say plainly that it is Connor's company."
+  ],
+  "hero": {
+    "eyebrow": "Founder, KaiCalls · building with AI out of Puerto Rico",
+    "headline": "Ask Connor\n<em>anything.</em>",
+    "prompt": "Say what you're building or what's broken, however it comes out. You get a straight answer, the moment Connor talks about it on video, and what to do next.",
+    "placeholder": "I'm a plumber and I miss half my calls while I'm on a job. What should I do?",
+    "button": "Get my answer"
+  },
+  "chips": [
+    { "label": "I keep missing calls", "query": "I run a small service business and I miss calls while I'm on jobs. What should I do?" },
+    { "label": "Start building with AI", "query": "I'm not a developer. How do I actually start building things with AI agents?" },
+    { "label": "Solo founder with AI", "query": "Can one person really run a software company with AI doing most of the work?" },
+    { "label": "First customers", "query": "I built a product but nobody is signing up. How do I get my first customers?" },
+    { "label": "What to automate first", "query": "What should a small business automate first with AI?" }
+  ],
+  "proof": [],
+  "featured_heading": "Connor already answered most of this, out loud.",
+  "featured_blurb": "Real videos from Connor's channels. Ask a question above and we'll take you to the second he talks about your situation.",
+  "offer": {
+    "name": "30 minutes with Connor",
+    "description": "A free 30-minute call with Connor to talk through their situation.",
+    "url": "https://calendar.app.google/cwZawdNiKZw7yopH6",
+    "cta_label": "Book 30 min with Connor",
+    "header_label": "Book a call",
+    "sticky_label": "Book 30 min with Connor",
+    "brief_cta": "Send this to Connor",
+    "note": "Free · 30 minutes · bring this answer with you",
+    "sheet_heading": "Want Connor to look at this?",
+    "no_moment": "Book 30 minutes and ask him directly.",
+    "fallback": "You can book 30 minutes with Connor instead.",
+    "form": {
+      "timing": { "label": "How soon?", "options": ["This week", "This month", "Just curious"] },
+      "or_label": "or send Connor the details",
+      "comments_placeholder": "What you're building, what you've tried, a link…",
+      "submit_label": "Send this to Connor",
+      "success": "Connor has this now, with what you already told us."
+    }
+  },
+  "intake": {
+    "fields": [
+      { "key": "business", "label": "Business", "description": "Their business or what they're building, only if they said." },
+      { "key": "goal", "label": "Goal", "description": "What they want to happen, in their words." },
+      { "key": "stuck_on", "label": "Stuck on", "description": "The problem or blocker they described." },
+      { "key": "tools", "label": "Tools", "description": "Tools, software or services they mentioned.", "list": true },
+      { "key": "already_tried", "label": "Already tried", "description": "Things they said they already tried.", "list": true, "each": true }
+    ]
+  },
+  "disclaimer": "Answers on this page are written by an AI from Connor Gallic's own published YouTube videos. Quotes are shown exactly as captioned and play from the second he says them. General information, not professional advice.",
+  "footer": "© 2026 Connor Gallic · connorgallic.com",
+  "theme": {
+    "paper": "#f3f1ec", "paper_2": "#ebe8e0", "card": "#fbfaf7",
+    "ink": "#15171a", "ink_soft": "#43474d", "ink_faint": "#868a90",
+    "line": "#dedad1", "line_strong": "#c9c4b8",
+    "accent": "#1f5eff", "accent_deep": "#1442b8", "accent_wash": "#e3eaff",
+    "secondary": "#15171a", "secondary_soft": "#33373d", "highlight": "#1f5eff"
+  }
+}

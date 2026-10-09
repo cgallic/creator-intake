@@ -1,0 +1,16 @@
+{
+  "name": "creator-intake",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ask <creator>: answers grounded in a creator's own YouTube videos, every quote verified word for word and played from the second it is said, ending in the creator's offer pre-filled from what the visitor said.",
+  "scripts": {
+    "fetch": "node build/fetch.mjs",
+    "index": "node build/index.mjs",
+    "use": "node build/use.mjs",
+    "dev": "node dev-server.mjs",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0"
+  }
+}

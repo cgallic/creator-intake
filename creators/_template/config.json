@@ -1,0 +1,79 @@
+{
+  "_notes": {
+    "slug": "Must match the folder name under creators/.",
+    "speaker": "\"solo\" = every caption line is the creator. \"interview\" = YouTube's >> speaker markers plus a question heuristic keep interviewers and guests unquotable.",
+    "intake.fields": "The structured facts the model pulls from what the visitor said; they pre-fill the lead brief. list:true = array; each:true = one row per item.",
+    "known_facts": "True things the guide may state even if no video says them: prices, offer details, contact.",
+    "exclude_video_ids": "Optional: YouTube ids to leave out (ads, other people talking, AI voiceovers).",
+    "featured_ids": "Optional: YouTube ids for the homepage grid. Default is the newest six.",
+    "theme": "Any CSS colors. Optional: serif, sans, fonts_href (a Google Fonts URL)."
+  },
+  "slug": "_template",
+  "name": "Full Name",
+  "short_name": "First",
+  "brand": "Ask First",
+  "tagline": "What they do, in one line",
+  "about": "Who they are, what they make videos about, and what they sell. The answering model reads this.",
+  "audience": "Who visits this page and what they want help with.",
+  "channels": ["https://www.youtube.com/@handle"],
+  "speaker": "interview",
+  "max_videos": 400,
+  "corpus_token_budget": 150000,
+  "known_facts": ["The offer costs $X and includes Y."],
+  "rules": ["Never promise a result."],
+  "hero": {
+    "eyebrow": "Credential · niche · place",
+    "headline": "Ask First\n<em>anything.</em>",
+    "prompt": "Say what's going on, however it comes out. You get a straight answer, the moment First talks about it on video, and what to do next.",
+    "placeholder": "A realistic question, in the visitor's own voice",
+    "button": "Get my answer"
+  },
+  "chips": [
+    { "label": "Short label", "query": "The full question the chip asks" }
+  ],
+  "proof": [
+    { "value": "10k", "label": "subscribers (delete the list to hide this strip)" }
+  ],
+  "featured_heading": "First already answered most of this, out loud.",
+  "featured_blurb": "Real videos from First's channel. Ask a question above and we'll take you to the second they talk about your situation.",
+  "offer": {
+    "name": "A free 30-minute call",
+    "description": "What the visitor gets next.",
+    "url": "https://example.com/book",
+    "cta_label": "Book a call",
+    "header_label": "Book a call",
+    "sticky_label": "Book a call",
+    "brief_cta": "Send this to First",
+    "note": "Free · 30 minutes",
+    "sheet_heading": "Want First to look at this?",
+    "no_moment": "Book a call and ask directly.",
+    "fallback": "You can book a call instead.",
+    "popup_after_seconds": 14,
+    "form": {
+      "timing": { "label": "How soon?", "options": ["This week", "This month", "Just curious"] },
+      "or_label": "or send First the details",
+      "comments_placeholder": "Anything that matters…",
+      "submit_label": "Send this to First",
+      "success": "First has this now."
+    }
+  },
+  "intake": {
+    "fields": [
+      { "key": "goal", "label": "Goal", "description": "What they want to happen, in their words." },
+      { "key": "stuck_on", "label": "Stuck on", "description": "The problem or blocker they described." },
+      { "key": "already_tried", "label": "Already tried", "description": "Things they said they already tried.", "list": true, "each": true }
+    ]
+  },
+  "disclaimer": "",
+  "footer": "",
+  "theme": {
+    "paper": "#f4efe5",
+    "card": "#fbf8f1",
+    "ink": "#1b1813",
+    "accent": "#a23a2d",
+    "accent_deep": "#7e2b20",
+    "accent_wash": "#f3e3df",
+    "secondary": "#2f4b3f",
+    "secondary_soft": "#4a6b5b"
+  }
+}
