@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
       title: p.title,
       paras: p.paras,
       components: compose(p, moments, rail, m),
-      ui: { primary: m.primary, popup: m.popup, popup_after_seconds: config.offer.popup_after_seconds || 14 },
+      ui: { primary: m.primary, alternate: m.alternate, popup: m.popup, popup_after_seconds: config.offer.popup_after_seconds || 14 },
       read: { lane: m.lane, intent: m.intent, offers: m.offers, why: m.why, declined: m.declined, jev: r ? { model: r.model, ms: r.ms, cost: r.cost } : null, judge: judged ? { ms: judged.ms, cost: judged.cost } : null },
       moments,
       facts: p.facts,

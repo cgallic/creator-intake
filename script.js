@@ -49,6 +49,7 @@ ev.told = ev.told || {}; ev.did = ev.did || []; ev.history = ev.history || [];
 function saveEv() { try { localStorage.setItem(EVIDENCE_KEY, JSON.stringify({ told: ev.told, did: ev.did.slice(-12), history: ev.history.slice(-4) })); } catch (_) {} }
 const cameFrom = (() => { const u = new URLSearchParams(location.search); const r = document.referrer ? new URL(document.referrer).hostname : ""; return [u.get("utm_source"), r && !r.endsWith(location.hostname) ? r : ""].filter(Boolean).join(" via ") || ""; })();
 let primary = null; // the next step Jev's read points to, applied to every CTA on the page
+let alternate = null; // a close second offer, shown under the main button
 
 /* ---------- boot: paint the page from the creator's config ---------- */
 function applyConfig() {
@@ -123,7 +124,7 @@ function resetAll() {
 }
 /* Back to the creator's default next step (a previous answer may have swapped it). */
 function resetPrimary() {
-  primary = null;
+  primary = null; alternate = null;
   const o = C.offer;
   $("#header-cta").href = o.url; $("#header-cta-label").textContent = o.header_label || o.cta_label;
   $("#sticky-call").href = o.url; $("#sticky-label").textContent = o.sticky_label || o.cta_label;
@@ -287,6 +288,7 @@ const CATALOG = {
     <div class="panel d2"><div class="panel-pad">
       <span class="panel-tag"><span class="dot"></span>${esc(isOffer ? C.offer.name : "Your next step")}</span>
       <div style="margin-top:12px">${offerButton()}</div>
+      ${alternate ? `<p class="brief-note" style="margin-top:10px">Or: <a href="${esc(alternate.url)}" ${/^https?:/.test(alternate.url) ? 'target="_blank" rel="noopener"' : ""}>${esc(alternate.label)}</a></p>` : ""}
       ${isOffer && C.offer.note ? `<p class="brief-note">${esc(C.offer.note)}</p>` : ""}
     </div></div>`;
   },
@@ -323,6 +325,7 @@ const CATALOG = {
 
 function renderAnswer(raw, d) {
   if (d.ui && d.ui.primary) primary = d.ui.primary; // before drawing, so every card agrees on the next step
+  alternate = (d.ui && d.ui.alternate) || null;
   const moments = d.moments || [];
   const comps = d.components || [];
   const col = (name) => comps.filter((c) => c.column === name && CATALOG[c.type]).map((c) => CATALOG[c.type](c)).join("");

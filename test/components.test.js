@@ -125,6 +125,12 @@ test("custom offers: Jev's clear pick becomes the next step; a close call keeps 
   assert.strictEqual(clear.primary.id, "course");
   assert.strictEqual(clear.offers.find((o) => o.id === "course").p, 0.8);
   const close = mold(cfg, read({ offer: choice("course", { course: 0.45, book: 0.4, watch: 0.15 }, 0.45) }));
-  assert.strictEqual(close.primary.id, "book");
-  assert.ok(close.declined.some((d) => d.q === "Offer"));
+  assert.strictEqual(close.primary.id, "course", "the leader, never a lower-rated default");
+  assert.strictEqual(close.alternate.id, "book");
+  const lead = mold(cfg, read({ offer: choice("course", { course: 0.52, book: 0.34, watch: 0.14 }, 0.4) }));
+  assert.strictEqual(lead.primary.id, "course", "52% vs 34% is a clear lead even at modest confidence");
+  assert.strictEqual(lead.alternate, null);
+  const spread = mold(cfg, read({ offer: choice("course", { course: 0.34, book: 0.33, watch: 0.33 }, 0.2) }));
+  assert.strictEqual(spread.primary.id, "book", "spread odds fall back to the default");
+  assert.ok(spread.declined.some((d) => d.q === "Offer"));
 });

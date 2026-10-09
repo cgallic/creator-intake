@@ -87,17 +87,28 @@ function mold(config, r, told = {}) {
   // Primary next step: Jev's offer pick when it's clear -> routes[intent][lane] -> routes[intent]["*"] -> default.
   const route = (intent && (j.routes || {})[intent]) || {};
   let moveId = (lane && route[lane]) || route["*"] || j.default_move;
-  let offerOdds = null;
+  // Offers: a clear leader wins; a close race between two shows both (leader first);
+  // only odds spread across everything fall back to the route/default. The page never
+  // picks something Jev rated lower than the leader.
+  let offerOdds = null, alternateId = null;
   const o = a.offer;
   if (o && o.probabilities) {
     offerOdds = o.probabilities;
-    const sorted = Object.values(o.probabilities).sort((x, y) => y - x);
-    const clear = (o.confidence ?? 0) >= 0.5 && sorted[0] - (sorted[1] || 0) >= 0.15;
-    if (clear && j.moves[o.choice]) { moveId = o.choice; why.push({ q: "Offer", answer: j.moves[o.choice].label, confidence: o.confidence, by: "Jev" }); }
-    else declined.push({ q: "Offer", answer: o.choice, confidence: o.confidence ?? 0, reason: "no clear winner, so the page uses the default", by: "Jev" });
+    const ranked = Object.entries(o.probabilities).filter(([id]) => j.moves[id]).sort((x, y) => y[1] - x[1]);
+    const [top, second, third] = [ranked[0] || [null, 0], ranked[1] || [null, 0], ranked[2] || [null, 0]];
+    if (top[0] && top[1] >= 0.45 && top[1] - second[1] >= 0.15) {
+      moveId = top[0];
+      why.push({ q: "Offer", answer: j.moves[top[0]].label, confidence: top[1], by: "Jev" });
+    } else if (top[0] && second[0] && top[1] + second[1] >= 0.6 && second[1] - third[1] >= 0.15) { // a real two-horse race
+      moveId = top[0]; alternateId = second[0];
+      why.push({ q: "Offer", answer: `${j.moves[top[0]].label} or ${j.moves[second[0]].label}`, confidence: top[1], by: "Jev" });
+    } else {
+      declined.push({ q: "Offer", answer: top[0], confidence: top[1], reason: "the odds are spread across everything, so the page uses the default", by: "Jev" });
+    }
   }
   const m = j.moves[moveId] || j.moves[j.default_move];
   const primary = { id: moveId, label: m.label, url: m.url };
+  const alternate = alternateId ? { id: alternateId, label: j.moves[alternateId].label, url: j.moves[alternateId].url } : null;
 
   const cards = (config.cards || [])
     .map((c) => ({ c, p: a[`card_${c.id}`] && typeof a[`card_${c.id}`].noul === "number" ? a[`card_${c.id}`].noul : null }))
@@ -113,7 +124,7 @@ function mold(config, r, told = {}) {
 
   return {
     decided: !!r,
-    lane, intent, primary, cards, clarify,
+    lane, intent, primary, alternate, cards, clarify,
     offers: offerOdds ? offerList(config).map(([id, m]) => ({ id, label: m.label, url: m.url, blurb: m.blurb || "", p: offerOdds[id] ?? 0 })) : null,
     show_facts: intent === "own_problem" || intent === "evaluating" || intent === "wants_creator",
     popup: !!intent && intent !== "asking",

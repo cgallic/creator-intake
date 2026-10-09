@@ -158,6 +158,9 @@
       .ocard.lose { opacity: 0.38; transform: scale(0.96); }
       .ocard.win { transform: translateY(-14px) rotate(-1.5deg) scale(1.06); box-shadow: 0 0 0 4px var(--caption), 0 18px 40px rgba(255,225,77,0.35); z-index: 2; }
       .ocard.win .meter i { background: var(--caption); }
+      .ocard.win2 { transform: translateY(-8px) rotate(1deg) scale(1.02); box-shadow: 0 0 0 3px rgba(255,225,77,0.6); z-index: 1; }
+      .ocard.win2::after { content: "close second"; position: absolute; top: -12px; right: 10px; background: #fff3a8; color: var(--ink); font-weight: 900; font-size: 12px; padding: 3px 9px; border-radius: 999px; }
+      .demo-cta + .demo-cta { margin-left: 8px; background: #fff; }
       .ocard.win::after { content: "Jev's pick"; position: absolute; top: -12px; right: 10px; background: var(--caption); color: var(--ink); font-weight: 900; font-size: 12px; padding: 3px 9px; border-radius: 999px; }
       @media (prefers-reduced-motion: reduce) { .ocard, .ocard.deal, .ocard .meter i { animation: none; transition: none; } }
       .demo-cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; background: var(--caption); color: var(--ink); font-weight: 800; font-stretch: 110%; text-decoration: none; border-radius: 999px; padding: 12px 18px; }
@@ -637,13 +640,17 @@
           });
           await wait(1000);
           const picked = order.find((o) => o.url === primary.url);
+          const alt = m && m.alternate ? order.find((o) => o.url === m.alternate.url) : null;
           const sorted = [...order].sort((a, b) => b.p - a.p);
           const clear = picked && sorted[0].id === picked.id;
-          document.querySelectorAll("#deck .ocard").forEach((el) => el.classList.add(clear && el.dataset.id === picked.id ? "win" : "lose"));
+          document.querySelectorAll("#deck .ocard").forEach((el) => el.classList.add(clear && el.dataset.id === picked.id ? "win" : alt && el.dataset.id === alt.id ? "win2" : "lose"));
           if (!clear) document.querySelectorAll("#deck .ocard").forEach((el) => el.classList.remove("lose"));
-          $("#deal-after").innerHTML = `<span class="demo-why">${clear
+          const altCta = alt ? `<a class="demo-cta" href="${esc(alt.url)}" ${/^https?:/.test(alt.url) ? 'target="_blank" rel="noopener"' : ""}>${esc(alt.label)} →</a>` : "";
+          $("#deal-after").innerHTML = `<span class="demo-why">${alt
+            ? `It's close between <b>${esc(picked.label)}</b> and <b>${esc(alt.label)}</b>, so the page offers both, the leader first:`
+            : clear
             ? `${want ? `They're <b>${esc(wantLabel)}</b>, and ` : ""}<b>${esc(picked.label)}</b> fits best, so that's the button they get:`
-            : `No clear winner, so the page doesn't guess. It shows the default and asks them one quick question:`}</span>${cta}
+            : `The odds are spread across everything, so the page doesn't guess. It shows the default and asks them one quick question:`}</span>${cta}${altCta}
             ${preview ? `<span class="demo-claim">These are ${esc(p.label)}'s own products. On your page, they're your offers. <a href="./new" style="color:inherit;font-weight:800">Make one for your channel</a></span>` : ""}`;
         }
 

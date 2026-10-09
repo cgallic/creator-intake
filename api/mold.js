@@ -30,6 +30,7 @@ module.exports = async (req, res) => {
     const m = jev.mold(config, r, told);
     return res.status(200).json({
       primary: m.primary,
+      alternate: m.alternate,
       popup: m.popup,
       clarify: m.clarify,
       show_facts: m.show_facts,
