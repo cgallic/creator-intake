@@ -608,7 +608,8 @@ function renderSheet(f) {
   const n = factPairs(f).slice(0, 4).map(([, v]) => v);
   const timing = form.timing || { label: "How soon do you want to hear back?", options: ["Today", "This week", "No rush"] };
   // When Jev picked a different offer than the creator's default, the sheet leads with that offer.
-  const picked = primary && primary.url !== o.url ? primary : null;
+  const stack = ((current && current.data.components) || []).find((c) => c.type === "offers");
+  const picked = primary && primary.url !== o.url ? { ...primary, ...((stack && stack.offers.find((x) => x.id === primary.id)) || {}) } : null;
   const noted = `<p class="sheet-p">${n.length ? `We've already noted <b>${esc(n.join(" · "))}</b> from what you told us — no need to repeat it.` : "We'll start from what you already told us."}</p>`;
   sheetBody.innerHTML = `
     <span class="sheet-kicker">● ${esc(picked ? "Best next step for you" : o.name)}</span>
