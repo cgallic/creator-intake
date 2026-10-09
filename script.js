@@ -292,6 +292,7 @@ const CATALOG = {
       ${isOffer && C.offer.note ? `<p class="brief-note">${esc(C.offer.note)}</p>` : ""}
     </div></div>`;
   },
+  offers: (c) => offerStack(c.offers, c.pick, c.alt, true),
   card: (c) => `
     <div class="panel d3 card-x card-${esc(c.id)}"><div class="panel-pad">
       <span class="panel-tag"><span class="dot"></span>${esc(c.kicker || "")}</span>
@@ -323,6 +324,50 @@ const CATALOG = {
     </div></div>`,
 };
 
+/* The creator's offers, after an answer: Jev's pick as the hero card, a close second if
+   there is one, the rest as compact rows with their fit. Deals in once per answer. */
+function offerStack(offers, pickId, altId, deal) {
+  if (!offers || !offers.length) return "";
+  const byFit = [...offers].sort((a, b) => b.p - a.p);
+  const pick = offers.find((o) => o.id === pickId) || byFit[0];
+  const alt = altId ? offers.find((o) => o.id === altId) : null;
+  const rest = byFit.filter((o) => o !== pick && o !== alt);
+  const ext = (u) => (/^https?:/.test(u) ? 'target="_blank" rel="noopener"' : "");
+  const fit = (o) => Math.round((o.p || 0) * 100);
+  const d = (i) => (deal ? ` deal" style="animation-delay:${i * 110}ms` : "");
+  return `
+    <div class="offers-stack panel" data-offers>
+      <div class="o-hero${d(0)}">
+        <span class="o-kicker">Best next step for you</span>
+        <div class="o-head"><h3 class="o-name">${esc(pick.label)}</h3>${pick.price ? `<span class="o-price">${esc(pick.price)}</span>` : ""}</div>
+        ${pick.blurb ? `<p class="o-blurb">${esc(pick.blurb)}</p>` : ""}
+        ${(pick.points || []).length ? `<ul class="o-points">${pick.points.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+        <a class="o-cta" href="${esc(pick.url)}" ${ext(pick.url)} data-offer="${esc(pick.label)}">${esc(pick.label)} <span aria-hidden="true">→</span></a>
+        <div class="o-fit"><span class="o-meter"><i data-w="${fit(pick)}"></i></span><span>${fit(pick)}% fit for what you asked</span></div>
+      </div>
+      ${alt ? `
+      <div class="o-alt${d(1)}">
+        <span class="o-kicker">Also a good fit</span>
+        <div class="o-head"><h4 class="o-name sm">${esc(alt.label)}</h4>${alt.price ? `<span class="o-price ghost">${esc(alt.price)}</span>` : ""}</div>
+        ${alt.blurb ? `<p class="o-blurb">${esc(alt.blurb)}</p>` : ""}
+        <a class="o-cta ghost" href="${esc(alt.url)}" ${ext(alt.url)} data-offer="${esc(alt.label)}">${esc(alt.label)} <span aria-hidden="true">→</span></a>
+        <div class="o-fit"><span class="o-meter"><i data-w="${fit(alt)}"></i></span><span>${fit(alt)}% fit</span></div>
+      </div>` : ""}
+      ${rest.length ? `
+      <div class="o-more${d(alt ? 2 : 1)}">
+        <span class="o-kicker">Other ways to work with ${esc(WHO)}</span>
+        ${rest.map((o) => `<a class="o-row" href="${esc(o.url)}" ${ext(o.url)} data-offer="${esc(o.label)}">
+          <span class="o-row-name">${esc(o.label)}${o.price ? ` <small>${esc(o.price)}</small>` : ""}</span>
+          <span class="o-meter mini"><i data-w="${fit(o)}"></i></span><span class="o-row-fit">${fit(o)}%</span></a>`).join("")}
+      </div>` : ""}
+    </div>`;
+}
+function fillMeters(root) {
+  const go = () => root.querySelectorAll(".o-meter i[data-w]").forEach((i) => { i.style.width = `${i.dataset.w}%`; });
+  requestAnimationFrame(() => requestAnimationFrame(go));
+  setTimeout(go, 400); // lands even if animation frames are paused
+}
+
 function renderAnswer(raw, d) {
   if (d.ui && d.ui.primary) primary = d.ui.primary; // before drawing, so every card agrees on the next step
   alternate = (d.ui && d.ui.alternate) || null;
@@ -341,6 +386,7 @@ function renderAnswer(raw, d) {
     </div>`;
 
   applyPrimary(d.ui && d.ui.primary);
+  fillMeters(answer);
   streamParas("#synth-body", d.paras || []);
   stickyCall.hidden = false;
   wireAnswerEvents(moments, (comps.find((c) => c.type === "rail") || {}).clips || []);
@@ -464,7 +510,8 @@ function wireAnswerEvents(moments, rail = []) {
     const t = e.target.closest("[data-tell]");
     if (t) { const key = t.closest("[data-clarify]").dataset.clarify; ev.told[key] = t.dataset.tell; did(`told us ${key}: ${t.textContent}`); t.closest(".clarify").remove(); return; }
     const a = e.target.closest("a");
-    if (a && a.closest(".card-x")) did(`tapped card: ${a.closest(".card-x").querySelector(".card-title")?.textContent || ""} (${a.textContent.trim()})`);
+    if (a && a.dataset.offer) did(`tapped offer: ${a.dataset.offer}`);
+    else if (a && a.closest(".card-x")) did(`tapped card: ${a.closest(".card-x").querySelector(".card-title")?.textContent || ""} (${a.textContent.trim()})`);
     else if (a && a.matches("[data-primary]")) did(`tapped next step: ${a.textContent.trim()}`);
   });
   answer.querySelectorAll("[data-moment]").forEach((el) => {
@@ -491,6 +538,8 @@ async function remold() {
     if (!r.ok || m.skipped || m.error) return;
     applyPrimary(m.primary);
     const side = answer.querySelectorAll(".answer-grid .col")[1];
+    const stack = side && side.querySelector("[data-offers]");
+    if (stack && m.offers) { stack.outerHTML = offerStack(m.offers, m.primary.id, m.alternate ? m.alternate.id : null, true); fillMeters(side); }
     if (side) {
       side.querySelectorAll(".card-x").forEach((x) => x.remove());
       const anchor = side.querySelector(".brief-cta, [data-primary]")?.closest(".panel");

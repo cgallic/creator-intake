@@ -125,7 +125,7 @@ function mold(config, r, told = {}) {
   return {
     decided: !!r,
     lane, intent, primary, alternate, cards, clarify,
-    offers: offerOdds ? offerList(config).map(([id, m]) => ({ id, label: m.label, url: m.url, blurb: m.blurb || "", p: offerOdds[id] ?? 0 })) : null,
+    offers: offerOdds ? offerList(config).map(([id, m]) => ({ id, label: m.label, url: m.url, blurb: m.blurb || "", price: m.price || "", points: m.points || [], p: offerOdds[id] ?? 0 })) : null,
     show_facts: intent === "own_problem" || intent === "evaluating" || intent === "wants_creator",
     popup: !!intent && intent !== "asking",
     why, declined,

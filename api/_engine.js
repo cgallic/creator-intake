@@ -241,7 +241,10 @@ function build(config, corpus) {
     if ((p.steps || []).length) c.push({ type: "steps", column: "main", steps: p.steps });
     if (rail.length) c.push({ type: "rail", column: "main", clips: rail });
     if (m.clarify) c.push({ type: "clarify", column: "side", ...m.clarify });
-    c.push(m.show_facts ? { type: "facts", column: "side", facts: p.facts } : { type: "offer", column: "side" });
+    if (m.offers && m.offers.length > 1) {
+      c.push({ type: "offers", column: "side", offers: m.offers, pick: m.primary.id, alt: m.alternate ? m.alternate.id : null });
+      if (m.show_facts) c.push({ type: "facts", column: "side", facts: p.facts });
+    } else c.push(m.show_facts ? { type: "facts", column: "side", facts: p.facts } : { type: "offer", column: "side" });
     for (const card of m.cards) c.push({ type: "card", column: "side", id: card.id, kicker: card.kicker, title: card.title, body: card.body, button: card.button, secondary: card.secondary });
     if ((p.followups || []).length) c.push({ type: "followups", column: "side", followups: p.followups });
     return c;

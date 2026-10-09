@@ -230,31 +230,60 @@
         "label": "Book 30 min with Connor",
         "url": "https://www.kaicalls.com/l/XJmd7BiX",
         "when": "They want to talk to Connor, hire him, or get hands-on help with their own business or AI setup.",
-        "blurb": "Free 30 minutes with Connor"
+        "blurb": "Free 30 minutes with Connor",
+        "price": "Free",
+        "points": [
+          "30 minutes, one-on-one with Connor",
+          "Bring this answer and your situation",
+          "Pick a time that works for you"
+        ]
       },
       "try_kaicalls": {
         "label": "Try KaiCalls",
         "url": "https://www.kaicalls.com/start",
         "when": "They run a business that misses calls and are ready to try an AI secretary now.",
-        "blurb": "AI secretary, from $10/mo"
+        "blurb": "AI secretary, from $10/mo",
+        "price": "from $10/mo",
+        "points": [
+          "Answers every call, takes the message, books the job",
+          "Every plan includes a phone number",
+          "30-day refund"
+        ]
       },
       "call_demo": {
         "label": "Call Kai: 417-835-0402",
         "url": "tel:+14178350402",
         "when": "They want to hear what an AI phone secretary sounds like before deciding anything.",
-        "blurb": "Call Kai and hear it answer"
+        "blurb": "Call Kai and hear it answer",
+        "price": "Free call",
+        "points": [
+          "Call 417-835-0402 right now",
+          "Kai answers the way it would for a business",
+          "No signup"
+        ]
       },
       "read_book": {
         "label": "Read the free book",
         "url": "https://book.kaicalls.com",
         "when": "They want to learn about missed calls, answering the phone and automation in a small business, at their own pace.",
-        "blurb": "Free book: Money Walking Out the Door"
+        "blurb": "Free book: Money Walking Out the Door",
+        "price": "Free",
+        "points": [
+          "Money Walking Out the Door",
+          "14 short chapters on missed calls and automation",
+          "Read online or download the PDF"
+        ]
       },
       "watch_more": {
         "label": "More from Connor on YouTube",
         "url": "https://www.youtube.com/@connorgallic",
         "when": "They're learning about building with AI agents or running a one-person company and want more of Connor's videos.",
-        "blurb": "More from Connor on YouTube"
+        "blurb": "More from Connor on YouTube",
+        "price": "Free",
+        "points": [
+          "Short videos on building with AI agents",
+          "Running a business with a tiny team"
+        ]
       }
     },
     "default_move": "book_call",
