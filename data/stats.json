@@ -5,20 +5,20 @@
  "with_captions": 642,
  "cut_not_on_camera": 57,
  "cut_ai_voice": 5,
- "cut_duplicates": 33,
- "clips": 547,
- "words": 81363,
+ "cut_duplicates": 40,
+ "clips": 540,
+ "words": 80947,
  "hours": 8.2,
  "lanes": [
   {
    "id": "agents",
    "label": "Building with AI agents",
-   "n": 279
+   "n": 276
   },
   {
    "id": "other",
    "label": "Everything else",
-   "n": 78
+   "n": 77
   },
   {
    "id": "kaicalls",
@@ -28,7 +28,7 @@
   {
    "id": "missed_calls",
    "label": "Missed calls & answering the phone",
-   "n": 66
+   "n": 63
   },
   {
    "id": "customers",
@@ -54,11 +54,6 @@
    {
     "t": 8,
     "text": "They're going to go hit the next guy on Google, and that job is going to be gone in 90 seconds. You've lost it. You're gone. Go home.",
-    "who": "creator"
-   },
-   {
-    "t": 15,
-    "text": "[cough and clears throat]",
     "who": "creator"
    },
    {

@@ -11,6 +11,8 @@ const { verifyMoment: verifyIn } = require("./_verify");
 let client = null;
 
 function build(config, corpus) {
+  // Non-speech caption annotations ([Music], [cough]) are never part of what the creator said.
+  for (const c of corpus.clips) c.lines = c.lines.map((l) => ({ ...l, text: l.text.replace(/\[[^\]]*\]/g, " ").replace(/\s+/g, " ").trim() })).filter((l) => l.text);
   const MODEL = "claude-opus-5-5";
   const WHO = config.short_name;
   const LABEL = WHO.toUpperCase().replace(/[^A-Z0-9]+/g, "_");

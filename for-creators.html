@@ -535,10 +535,19 @@
             return `<div class="cline"><span class="ts">${mmss(l.t)}</span><span>${html}</span></div>`;
           }).join("");
           const qw = ck.quote.split(/\s+/);
-          const k = Math.min(qw.length - 1, 9);
-          const bad = qw.slice(0, 14).map((w, i) => (i === k ? `<s>${esc(w)}</s> <ins>${esc(w.toLowerCase() === "not" ? "always" : "never")}</ins>` : esc(w))).join(" ");
+          const neg = qw.findIndex((w) => /^(not|never|no|don't|can't|won't)$/i.test(w.replace(/[^a-z']/gi, "")));
+          let bad, why;
+          if (neg >= 0) {
+            const from = Math.max(0, neg - 7), to = Math.min(qw.length, neg + 6);
+            bad = qw.slice(from, to).map((w, i) => (from + i === neg ? `<s>${esc(w)}</s>` : esc(w))).join(" ");
+            why = "One word missing, and it says the opposite. Thrown out, never shown.";
+          } else {
+            const k = Math.min(qw.length - 1, 6);
+            bad = qw.slice(0, 12).map((w, i) => (i === k ? `<s>${esc(w)}</s> <ins>${esc(w.toLowerCase() === "always" ? "never" : "always")}</ins>` : esc(w))).join(" ");
+            why = "One word changed. Thrown out, never shown.";
+          }
           $("#captrack").innerHTML = `<div class="captrack"><p class="ttl">Your captions: “${esc(ck.title)}”</p>${lines}<p class="match">Found, word for word. Plays from ${mmss(ck.t)}.</p></div>
-            <div class="reject">“${bad}…”<span class="no">One word off. Thrown out, never shown.</span></div>`;
+            <div class="reject">“…${bad}…”<span class="no">${why}</span></div>`;
         }
 
         // 4. funnel + topics

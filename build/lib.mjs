@@ -30,5 +30,6 @@ export function captionLines(json3, soloOnly) {
       else cur.text += " " + p.text;
     }
   }
-  return lines.map((l) => ({ ...l, text: l.text.replace(/\s+/g, " ").trim() })).filter((l) => l.text);
+  // Drop non-speech annotations like [Music], [Applause] or [cough and clears throat].
+  return lines.map((l) => ({ ...l, text: l.text.replace(/\[[^\]]*\]/g, " ").replace(/\s+/g, " ").trim() })).filter((l) => l.text);
 }
