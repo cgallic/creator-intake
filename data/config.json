@@ -136,5 +136,15 @@
     "secondary_soft": "#33373d",
     "highlight": "#1f5eff"
   },
-  "require_screening": true
+  "require_screening": true,
+  "exclude_caption_patterns": [
+    "thanks? (you )?for calling",
+    "how (can|may) i (help|assist) you",
+    "\bthis is kai\b",
+    "\bkai here\b",
+    "you('ve| have) reached",
+    "leave (a|your) (message|name)",
+    "is there anything else i can help",
+    "kai calls,? i.?m kai"
+  ]
 }
