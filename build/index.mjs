@@ -66,7 +66,12 @@ function readTsv(file, cols) {
 /* Optional creators/<slug>/crosspost.json: { "<youtube id>": [{ "network": "instagram", "url": "..." }] }
    for clips also posted elsewhere. No entry = YouTube only, never a guess. */
 const crosspost = fs.existsSync(path.join(dir, "crosspost.json")) ? JSON.parse(fs.readFileSync(path.join(dir, "crosspost.json"), "utf8")) : {};
-const exclude = new Set(config.exclude_video_ids || []);
+/* Optional creators/<slug>/screened.json: { keep: [ids], exclude: [{ youtube_id, why }] } from the
+   thumbnail screen (build/contact_sheets.py). With config.require_screening, only "keep" clips go in. */
+const screened = fs.existsSync(path.join(dir, "screened.json")) ? JSON.parse(fs.readFileSync(path.join(dir, "screened.json"), "utf8")) : { keep: [], exclude: [] };
+const exclude = new Set([...(config.exclude_video_ids || []), ...screened.exclude.map((e) => e.youtube_id)]);
+const keep = new Set(screened.keep);
+const unscreened = [];
 
 const listing = readTsv(path.join(capDir, "listing.tsv"), ["id", "title", "duration", "url", "tab"]);
 const meta = new Map();
@@ -79,6 +84,7 @@ const videos = [], missing = [];
 for (const [id, l] of listing) {
   if (exclude.has(id)) continue;
   const m = meta.get(id) || {};
+  if (!keep.has(id) && files.some((f) => f.startsWith(id + "."))) { unscreened.push(id); if (config.require_screening) continue; }
   // Prefer a human caption track ("en") over auto-captions ("en-orig", "en-en", ...).
   const cand = files.filter((f) => f.startsWith(id + ".")).sort((a, b) => a.length - b.length);
   const lines = cand.length ? captionLines(JSON.parse(fs.readFileSync(path.join(capDir, cand[0]), "utf8")), config.speaker === "solo") : [];
@@ -118,6 +124,7 @@ const corpus = {
   clips,
 };
 fs.writeFileSync(path.join(dir, "corpus.json"), JSON.stringify(corpus));
+fs.writeFileSync(path.join(dir, "unscreened.json"), JSON.stringify(unscreened.map((id) => ({ youtube_id: id, title: (meta.get(id) || listing.get(id) || {}).title }))));
 
 // Homepage grid: config.featured_ids if set, otherwise the newest clips with a usable title.
 const pick = config.featured_ids?.length
@@ -136,6 +143,7 @@ console.log(JSON.stringify({
   budget: BUDGET,
   dropped_over_budget: overBudget.length,
   missing_captions: missing.length,
+  unscreened: unscreened.length + (config.require_screening ? " (left out: require_screening)" : " (included)"),
   words_creator: clips.reduce((a, c) => a + c.lines.filter((l) => l.who === "creator").reduce((b, l) => b + words(l.text), 0), 0),
   clips_with_other_speakers: clips.filter((c) => c.lines.some((l) => l.who === "other")).length,
   newest: clips[0]?.published, oldest: clips.at(-1)?.published,

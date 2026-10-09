@@ -1,13 +1,15 @@
 """Contact sheets of clip thumbnails (numbered tiles) so a reviewer can mark
 which clips show the creator on camera (anything else goes in config.exclude_video_ids).
-Usage: python build/contact_sheets.py creators/<slug>/corpus.json <outdir>   (needs Pillow)
+Usage: python build/contact_sheets.py creators/<slug>/unscreened.json <outdir>   (needs Pillow)
+(or corpus.json). Record the verdicts in creators/<slug>/screened.json.
 Writes sheet_NN.png (6x5 = 30 tiles each) and index.json mapping tile number -> youtube id/title."""
 import json, sys, io, os, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from PIL import Image, ImageDraw, ImageFont
 
 corpus, out = sys.argv[1], sys.argv[2]
-clips = json.load(open(corpus, encoding="utf8"))["clips"]
+data = json.load(open(corpus, encoding="utf8"))
+clips = data["clips"] if isinstance(data, dict) else data  # corpus.json, or unscreened.json from build/index.mjs
 os.makedirs(out, exist_ok=True)
 W, H, COLS, ROWS = 240, 135, 6, 5
 

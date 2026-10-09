@@ -5,3 +5,5 @@ node_modules/
 creators/*/captions/
 
 .vercel
+creators/*/unscreened.json
+creators/*/fetch.log

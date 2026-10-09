@@ -20,7 +20,7 @@ npm install
 cp -r creators/_template creators/<slug>      # then edit creators/<slug>/config.json
 node build/fetch.mjs <slug>                   # lists their channel(s), pulls captions (yt-dlp)
 node build/index.mjs <slug>                   # builds creators/<slug>/corpus.json + featured.json
-python build/contact_sheets.py creators/<slug>/corpus.json /tmp/sheets   # QA: who is on camera?
+python build/contact_sheets.py creators/<slug>/unscreened.json /tmp/sheets   # QA: who is on camera?
 node build/use.mjs <slug>                     # makes <slug> what this deploy serves (copies into data/)
 npm test
 npm run dev                                   # http://localhost:3000, reads .env
@@ -29,9 +29,12 @@ vercel deploy --prod                          # one Vercel project per creator
 
 **Screen out voices that aren't the creator before going live.** A channel often mixes
 on-camera takes with faceless ads, AI voiceovers, product demos and guests. Captions
-from those would be quoted as the creator's words. `contact_sheets.py` renders every
-clip's thumbnail on numbered sheets. Put every id where the creator isn't on camera
-into `exclude_video_ids`, then run index again.
+from those would be quoted as the creator's words. `build/index.mjs` writes `unscreened.json`, and
+`contact_sheets.py` renders those thumbnails on numbered sheets. Record the verdicts in
+`creators/<slug>/screened.json`: `keep` for the creator on camera talking, `exclude` for
+anything else. Then run index again. With `"require_screening": true` in config, clips
+that haven't been screened never reach the corpus, so new uploads stay out until
+someone screens them.
 
 The only input is their YouTube channel URL. `fetch.mjs` reads the `/videos`, `/shorts`
 and `/streams` tabs and is safe to re-run: it only downloads captions for new uploads.

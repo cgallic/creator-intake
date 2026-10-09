@@ -135,5 +135,6 @@
     "secondary": "#15171a",
     "secondary_soft": "#33373d",
     "highlight": "#1f5eff"
-  }
+  },
+  "require_screening": true
 }
