@@ -74,18 +74,37 @@ every field. The important ones are:
 - **The page** (`index.html`, `script.js`, `styles.css`) has no build step. It paints
   itself from `data/config.json` and renders only what the endpoints return.
 
+## Put it on the creator's own site
+
+Each deploy works at its own `*.vercel.app` URL and under a sub-path of another site.
+To serve it at `example.com/ask`, add a proxy rewrite on that site, for example in
+Next.js `next.config.ts`:
+
+```ts
+async rewrites() {
+  return [
+    { source: "/ask", destination: "https://<project>.vercel.app/" },
+    { source: "/ask/:path*", destination: "https://<project>.vercel.app/:path*" },
+  ];
+}
+```
+
+The page notices it is under `/ask` and resolves its assets and API calls there. Set
+`canonical_url` in config to the public address.
+
 ## Env
 
 | Var | |
 |---|---|
 | `ANTHROPIC_API_KEY` | required |
 | `LEAD_WEBHOOK_URL` | where leads go; optional |
-| `ANSWER_LIMIT_PER_HOUR` | per-IP cap per function instance (default 30) |
+| `ANSWER_LIMIT_PER_HOUR` | questions per visitor per hour, per function instance (default 30) |
+| `ANSWER_CAP_PER_HOUR` | questions across all visitors per hour, per function instance (default 300): the spend guard |
 
 ## Cost, speed, limits
 
 Each question costs about $0.05 and takes 10–17 s: a cache read of the corpus plus
-about 1.5k output tokens. The per-IP cap is best effort only. Before a big public
+about 1.5k output tokens. The rate limits are best effort only. Before a big public
 push, add a Vercel Firewall rate-limit rule on `/api/answer`.
 
 YouTube captions are auto-generated, so a quote is exactly what the captions say,

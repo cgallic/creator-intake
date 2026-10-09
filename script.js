@@ -37,6 +37,7 @@ const vidScrim = $("#vid-scrim"), vidStage = $("#vid-stage"), vidClose = $("#vid
 const stickyCall = $("#sticky-call");
 
 let current = null;      // { raw, data } for the answer on screen
+const VISITOR = (() => { try { let v = localStorage.getItem("ask-visitor"); if (!v) { v = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("ask-visitor", v); } return v; } catch (_) { return ""; } })();
 let askSeq = 0;          // ignore a slow answer once a newer question was asked
 let surveyState = {};
 
@@ -56,6 +57,7 @@ function applyConfig() {
   $("#favicon").href = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='${accent}'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' fill='${paper}' text-anchor='middle'%3E${letter}%3C/text%3E%3C/svg%3E`;
 
   document.title = C.page_title || `Ask ${WHO}`;
+  if (C.canonical_url) { const l = document.createElement("link"); l.rel = "canonical"; l.href = C.canonical_url; document.head.appendChild(l); }
   document.querySelector('meta[name="description"]').content = C.hero.prompt || "";
   $("#brand-name").textContent = C.brand || C.name;
   $("#brand-sub").textContent = C.tagline || "";
@@ -88,7 +90,7 @@ function applyConfig() {
 askForm.addEventListener("submit", (e) => { e.preventDefault(); const v = askInput.value.trim(); if (v) runAsk(v); });
 $("#chips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (c) { askInput.value = c.dataset.query; runAsk(c.dataset.query); } });
 resetBtn.addEventListener("click", resetAll);
-$("#wordmark").addEventListener("click", (e) => { if (document.body.classList.contains("answering")) { e.preventDefault(); resetAll(); } });
+$("#wordmark").addEventListener("click", (e) => { e.preventDefault(); if (document.body.classList.contains("answering")) resetAll(); else window.scrollTo({ top: 0, behavior: "smooth" }); });
 window.addEventListener("scroll", () => { $("#masthead").classList.toggle("scrolled", window.scrollY > 10); });
 
 function resetAll() {
@@ -145,7 +147,7 @@ async function runAsk(raw) {
 
   let data = null, error = null;
   try {
-    const r = await fetch("/api/answer", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ q: raw }) });
+    const r = await fetch("./api/answer", { method: "POST", headers: { "content-type": "application/json", "x-visitor": VISITOR }, body: JSON.stringify({ q: raw }) });
     data = await r.json();
     if (!r.ok || data.error) { error = data.error || `Something went wrong (${r.status}).`; data = null; }
   } catch (_) {
@@ -440,7 +442,7 @@ async function submitLead(f) {
   const clip = (current.data.moments || [])[0];
   let sent = false, err = null;
   try {
-    const r = await fetch("/api/lead", { method: "POST", headers: { "content-type": "application/json" },
+    const r = await fetch("./api/lead", { method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ name, contact, when: surveyState.when, comments: surveyState.comments !== current.raw ? surveyState.comments : "", said: current.raw, facts: f, clip: clip ? clip.title : "" }) });
     const d = await r.json(); sent = !!d.sent; if (!r.ok) err = d.error;
   } catch (_) { err = "We couldn't send that just now."; }

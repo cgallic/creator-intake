@@ -2,6 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <script>
+      /* Served under a sub-path by a proxy rewrite (e.g. connorgallic.com/ask, no trailing
+         slash)? Resolve ./assets and ./api against that path, not the site root. */
+      if (!location.pathname.endsWith("/")) { var b = document.createElement("base"); b.href = location.pathname + "/"; document.head.appendChild(b); }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Ask</title>
     <meta name="description" content="" />
