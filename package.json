@@ -13,5 +13,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
     "@vercel/blob": "^2.8.1"
-  }
+  },
+  "license": "MIT",
+  "repository": "github:cgallic/creator-intake"
 }

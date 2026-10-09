@@ -33,13 +33,13 @@ module.exports = async (req, res) => {
       for (const bl of blobs) {
         const job = await store.getJSON(bl.pathname);
         if (!job) continue;
-        const stale = job.status === "claimed" && Date.now() - Date.parse(job.updated_at) > 30 * 60e3;
+        const stale = (job.status === "claimed" || job.status === "building") && Date.now() - Date.parse(job.updated_at) > 30 * 60e3;
         if (job.status === "queued" || stale) return res.status(200).json(await update(job.id, { status: "claimed", stage: "starting", detail: "A builder picked this up" }));
       }
       return res.status(200).json({});
     }
     if (a === "progress" && req.method === "POST") {
-      const patch = { stage: String(b.stage || "").slice(0, 40), detail: String(b.detail || "").slice(0, 200) };
+      const patch = { status: "building", stage: String(b.stage || "").slice(0, 40), detail: String(b.detail || "").slice(0, 200) };
       if (b.name) patch.name = String(b.name).slice(0, 120);
       await update(String(b.id), patch);
       return res.status(200).json({ ok: true });
