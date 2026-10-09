@@ -7,7 +7,8 @@
     "exclude_video_ids": "Optional: YouTube ids to leave out (ads, other people talking, AI voiceovers).",
     "featured_ids": "Optional: YouTube ids for the homepage grid. Default is the newest six.",
     "theme": "Any CSS colors. Optional: serif, sans, fonts_href (a Google Fonts URL).",
-    "cards": "Optional fixed cards. Jev (TypeSafe's decision model, via OpenRouter) answers each card's `when` yes/no question about what the visitor said; cards at or above `threshold` show, highest probability first. Write `when` about `said` (the visitor's words). Body may use <strong>/<b>/<em>."
+    "cards": "Optional fixed cards. Jev (TypeSafe's decision model, via OpenRouter) answers each card's `when` yes/no question about what the visitor said; cards at or above `threshold` show, highest probability first. Write `when` about `said` (the visitor's words). Body may use <strong>/<b>/<em>.",
+    "jev.moves + pick_offer": "Custom offers. Each move is {label, url, when, blurb}. With jev.pick_offer true, Jev scores every offer against what the visitor asked and did ('when' is what it reads) and the clear winner becomes the page's next step; on a close call it falls back to jev.routes / jev.default_move. To set them on a live page: node build/set-offers.mjs <slug> offers.json"
   },
   "slug": "_template",
   "name": "Full Name",

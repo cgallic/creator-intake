@@ -41,6 +41,10 @@ About $0.002 a question with GPT-6 Luna on OpenRouter, and about $0.00004 per de
   with calibrated odds. The page acts on a topic or intent only when Jev is at least
   60% sure and at least 20 points ahead of its second choice. Otherwise it asks the
   visitor. What it infers changes the layout, never the wording of the answer.
+- **Custom offers:** give a creator several offers (a course, a call, a product),
+  each with a one-line `when`. Jev scores every offer against what the visitor asked,
+  and the clear winner becomes the button. Marc Lou's preview picks between ShipFast,
+  DataFast, CodeFast and TrustMRR this way. Set them with `build/set-offers.mjs`.
 - **The page** is a static HTML file that renders a component list from the API
   (A2UI-style). "Why this page?" on every answer shows what was decided and how sure
   it was.
