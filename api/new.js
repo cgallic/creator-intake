@@ -56,7 +56,10 @@ module.exports = async (req, res) => {
 
   // Built recently? Hand back the page.
   const existing = await store.getJSON(`creators/${slug}/config.json`).catch(() => null);
-  if (existing && existing.built_at && Date.now() - Date.parse(existing.built_at) < 7 * 864e5) {
+  // The operator (worker secret) can force a rebuild, e.g. after a pipeline improvement.
+  const operator = !!process.env.WORKER_SECRET && (req.headers.authorization || "") === `Bearer ${process.env.WORKER_SECRET}`;
+  if (existing && existing.claimed && b.rebuild) return res.status(409).json({ error: "That page has been claimed; its owner rebuilds it." });
+  if (existing && existing.built_at && !(b.rebuild && operator) && Date.now() - Date.parse(existing.built_at) < 7 * 864e5) {
     return res.status(200).json({ ready: true, url: `/c/${slug}` });
   }
 
