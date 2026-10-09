@@ -102,7 +102,7 @@ function mold(config, r, told = {}) {
     } else if (top[0] && second[0] && top[1] + second[1] >= 0.6 && second[1] - third[1] >= 0.15) { // a real two-horse race
       moveId = top[0]; alternateId = second[0];
       why.push({ q: "Offer", answer: `${j.moves[top[0]].label} or ${j.moves[second[0]].label}`, confidence: top[1], by: "Jev" });
-    } else if (top[0] && top[0] !== moveId && top[1] - (o.probabilities[moveId] || 0) >= 0.1) {
+    } else if (top[0] && top[0] !== moveId && top[1] - (o.probabilities[moveId] || 0) >= 0.05) {
       // Spread odds, but the leader still clearly beats the default: lead with it, keep the default beside it.
       alternateId = j.moves[moveId] ? moveId : null; moveId = top[0];
       why.push({ q: "Offer", answer: `${j.moves[top[0]].label}, then ${j.moves[alternateId || top[0]].label}`, confidence: top[1], by: "Jev" });

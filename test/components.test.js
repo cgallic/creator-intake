@@ -136,4 +136,6 @@ test("custom offers: Jev's clear pick becomes the next step; a close call keeps 
   const loose = mold(cfg, read({ offer: choice("course", { course: 0.42, watch: 0.29, book: 0.28 }, 0.3) }));
   assert.strictEqual(loose.primary.id, "course", "42% vs a 28% default: the leader leads, never the lower default");
   assert.strictEqual(loose.alternate.id, "book", "the default stays beside it");
+  const near = mold(cfg, read({ offer: choice("course", { course: 0.39, book: 0.31, watch: 0.30 }, 0.3) }));
+  assert.strictEqual(near.primary.id, "course", "8 points ahead of the default still leads; the hero is never below a row");
 });
