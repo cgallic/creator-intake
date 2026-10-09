@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>How it works</title>
+    <meta name="description" content="An ask-me page built from a creator's own videos. A decision model reshapes it around what each visitor asks and does, and asks when it isn't sure." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Hanken+Grotesk:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" />
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .fc { max-width: var(--maxw); margin: 0 auto; padding: 24px clamp(16px, 4vw, 56px) 80px; }
+      .fc-hero { max-width: 760px; margin: 40px 0 36px; }
+      .fc-hero h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(34px, 5vw, 56px); line-height: 1.04; margin: 10px 0 16px; letter-spacing: -0.01em; }
+      .fc-hero p { font-size: 18px; color: var(--ink-soft); margin: 0; }
+      .fc h2 { font-family: var(--serif); font-weight: 600; font-size: 28px; margin: 56px 0 6px; }
+      .fc .lede { color: var(--ink-soft); margin: 0 0 22px; max-width: 720px; }
+      .people { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+      @media (max-width: 860px) { .people { grid-template-columns: 1fr; } }
+      .person { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 22px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 14px; }
+      .who { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); }
+      .said { font-family: var(--serif); font-size: 19px; line-height: 1.3; margin: 0; }
+      .sec { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px; }
+      .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+      .pill { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--accent-wash); color: var(--accent-deep); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
+      .pill.no { background: var(--paper-2); color: var(--ink-faint); border-color: var(--line); }
+      .pill b { font-family: var(--mono); font-weight: 500; font-size: 11.5px; margin-left: 4px; }
+      .did { margin: 0; padding-left: 18px; font-size: 14.5px; color: var(--ink-soft); }
+      .did li { margin: 3px 0; }
+      .did strong { color: var(--ink); }
+      .thumbs { display: flex; gap: 6px; }
+      .thumbs img { width: 25%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; background: #1d1a15; }
+      .meta { font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); margin-top: auto; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+      .meta a { color: var(--accent); text-decoration: none; font-weight: 500; }
+      .steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+      @media (max-width: 860px) { .steps3 { grid-template-columns: 1fr; } }
+      .step3 { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 20px; }
+      .step3 .n { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+      .step3 h3 { font-family: var(--serif); font-size: 20px; margin: 6px 0 6px; }
+      .step3 p { margin: 0; color: var(--ink-soft); font-size: 15px; }
+      .rules { columns: 2; column-gap: 32px; padding-left: 18px; color: var(--ink-soft); }
+      @media (max-width: 860px) { .rules { columns: 1; } }
+      .rules li { margin: 0 0 8px; break-inside: avoid; }
+      .get { margin-top: 56px; background: var(--secondary); color: #fff; border-radius: var(--r-lg); padding: clamp(24px, 4vw, 40px); display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: center; }
+      @media (max-width: 860px) { .get { grid-template-columns: 1fr; } }
+      .get h2 { color: #fff; margin: 0 0 8px; }
+      .get p { margin: 0; color: rgba(255, 255, 255, 0.78); }
+      .get a { display: inline-flex; justify-content: center; background: var(--accent); color: #fff; text-decoration: none; font-weight: 700; padding: 15px 22px; border-radius: 14px; }
+    </style>
+  </head>
+  <body class="booting">
+    <div class="grain" aria-hidden="true"></div>
+    <main class="shell">
+      <header class="masthead">
+        <a class="wordmark" href="./"><span class="wordmark-name" id="brand-name"></span><span class="wordmark-sub">How it works</span></a>
+        <div class="masthead-right"><a class="phone-link" href="./"><span class="phone-dot"></span>Try it</a></div>
+      </header>
+
+      <div class="fc">
+        <section class="fc-hero">
+          <p class="eyebrow" style="text-align:left">For creators</p>
+          <h1>One page. Every visitor gets a different one.</h1>
+          <p id="hero-p"></p>
+        </section>
+
+        <h2>Four visitors, four pages</h2>
+        <p class="lede">Real answers from the live page. Each visitor typed one thing; a decision model read only what that tells it, and the page reshaped itself. Where it wasn't sure, it said so, and asked.</p>
+        <div class="people" id="people"></div>
+
+        <h2>How it decides</h2>
+        <p class="lede">Two models with two jobs. A language model writes the answer from the creator's own videos. Jev, a decision model from TypeSafe, never writes a word: it answers typed questions with calibrated odds in about a fifth of a second, and plain code turns those odds into the page.</p>
+        <div class="steps3">
+          <div class="step3"><div class="n">01 · while the answer is written</div><h3>Reads the question</h3><p>Only what one question can really tell you: its topic, and whether they're learning, fixing their own problem, sizing up the product, or want the creator. Plus which of the creator's cards fit.</p></div>
+          <div class="step3"><div class="n">02 · after</div><h3>Judges the videos</h3><p>Every quote is checked word for word against the captions, then Jev checks it's on point. The "watch next" clips come from the same topic, each judged against what the visitor asked.</p></div>
+          <div class="step3"><div class="n">03 · as they use it</div><h3>Learns from what they do</h3><p>Open a clip, tap a card, answer the one-tap question: the page re-reads and reshapes in a quarter second, with no new answer written.</p></div>
+        </div>
+
+        <h2>What it won't do</h2>
+        <ul class="rules">
+          <li><strong>Guess who you are.</strong> A topic or intent counts only when the model is confident and clearly ahead of the runner-up. Everything else stays unknown.</li>
+          <li><strong>Ask before it answers.</strong> The one-tap question comes after the answer, only when it's unsure, and it's optional.</li>
+          <li><strong>Put guesses in your mouth.</strong> What it infers changes the layout, never the words of the answer.</li>
+          <li><strong>Quote anyone but the creator.</strong> Interviewers, guests, ads and AI voices are screened out of the videos it can quote.</li>
+          <li><strong>Make up a quote.</strong> A quote shows only if it appears word for word in the creator's captions, and it plays from that second.</li>
+          <li><strong>Remember you on a server.</strong> What it learns about a visitor stays in their own browser.</li>
+        </ul>
+
+        <section class="get">
+          <div><h2 id="get-h">Want one built from your channel?</h2><p id="get-p">Send your YouTube channel. The page is built from your own videos, quotes only you, and ends in your offer.</p></div>
+          <div><a id="get-a" href="#" target="_blank" rel="noopener">Book a call</a></div>
+        </section>
+      </div>
+
+      <footer class="site-footer"><p class="copyright" id="footer-line"></p></footer>
+    </main>
+
+    <script>
+      (async function () {
+        const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        const C = await (await fetch("./data/config.json")).json();
+        const t = C.theme || {};
+        const vars = { paper: "--paper", paper_2: "--paper-2", card: "--card", ink: "--ink", ink_soft: "--ink-soft", ink_faint: "--ink-faint", line: "--line", line_strong: "--line-strong", accent: "--accent", accent_deep: "--accent-deep", accent_wash: "--accent-wash", secondary: "--secondary", secondary_soft: "--secondary-soft", highlight: "--highlight" };
+        for (const [k, v] of Object.entries(vars)) if (t[k]) document.documentElement.style.setProperty(v, t[k]);
+        document.title = `How ${C.brand || "it"} works`;
+        document.getElementById("brand-name").textContent = C.brand || C.name;
+        document.getElementById("hero-p").textContent = `${C.brand || "This page"} answers from ${C.name}'s own videos and plays the second ${C.short_name} said it. Then it shapes the rest of the page around what each visitor asks and does, without pretending to know who they are.`;
+        document.getElementById("footer-line").textContent = C.footer || `© ${new Date().getFullYear()} ${C.name}`;
+        const get = { url: (C.powered_by && C.powered_by.book_url) || C.offer.url };
+        const a = document.getElementById("get-a");
+        a.href = get.url; a.textContent = C.offer.cta_label || "Book a call";
+
+        const lane = (id) => (C.jev && C.jev.lanes && C.jev.lanes[id] ? C.jev.lanes[id].label : id);
+        const intent = (id) => (C.jev && C.jev.intent_labels && C.jev.intent_labels[id]) || id;
+        const pct = (x) => (typeof x === "number" ? `${Math.round(x * 100)}%` : "");
+        try {
+          const demo = await (await fetch("./data/demo.json")).json();
+          document.getElementById("people").innerHTML = demo.visitors.map((v) => {
+            const read = v.read.why.filter((w) => w.q === "Topic" || w.q === "What they want")
+              .map((w) => `<span class="pill">${esc(w.q === "Topic" ? lane(w.answer) : intent(w.answer))}<b>${pct(w.confidence)}</b></span>`).join("");
+            const unsure = v.read.declined.map((w) => `<span class="pill no">${esc(w.q)}: not sure</span>`).join("");
+            const cards = v.components.filter((c) => c.type === "card").map((c) => c.title);
+            const clarify = v.components.find((c) => c.type === "clarify");
+            const moment = v.components.find((c) => c.type === "moment");
+            const more = v.components.find((c) => c.type === "more_moments");
+            const rail = v.components.find((c) => c.type === "rail");
+            const facts = v.components.some((c) => c.type === "facts");
+            const did = [
+              `Main button: <strong>${esc(v.primary.label)}</strong>`,
+              cards.length ? `Showed ${cards.map((c) => `<strong>${esc(c)}</strong>`).join(" and ")}` : "No product cards",
+              clarify ? `Asked: <strong>“${esc(clarify.question)}”</strong>` : null,
+              moment ? `Played the clip from the exact second it answers them${more ? `, plus ${more.n} more` : ""}` : `No clip fit, so none shown`,
+              rail ? `${rail.clips.length} “watch next” clips, each judged against the question` : null,
+              facts ? "Noted their situation to send to " + esc(C.short_name) : null,
+              v.popup ? "Offers a call after a moment" : "No pop-up: they're just learning",
+            ].filter(Boolean).map((x) => `<li>${x}</li>`).join("");
+            const thumbs = rail ? `<div class="thumbs">${rail.clips.slice(0, 4).map((c) => `<img src="${esc(c.thumb)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`).join("")}</div>` : "";
+            return `<article class="person">
+              <div class="who">${esc(v.who)}</div>
+              <p class="said">“${esc(v.q)}”</p>
+              <div><div class="sec">What Jev read</div><div class="pills">${read}${unsure}</div></div>
+              <div><div class="sec">What the page did</div><ul class="did">${did}</ul></div>
+              ${thumbs}
+              <div class="meta"><span>Jev ${v.read.jev_ms + (v.read.judge_ms || 0)} ms · $${v.read.jev_cost.toFixed(5)} · answer $${v.read.llm_cost.toFixed(4)}</span><a href="./?q=${encodeURIComponent(v.q)}">Try it live →</a></div>
+            </article>`;
+          }).join("");
+        } catch (_) {
+          document.getElementById("people").innerHTML = `<p class="lede">Examples aren't available right now. <a href="./">Try the page</a>.</p>`;
+        }
+        document.body.classList.remove("booting");
+      })();
+    </script>
+  </body>
+</html>

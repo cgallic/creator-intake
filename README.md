@@ -20,6 +20,7 @@ npm install
 cp -r creators/_template creators/<slug>      # then edit creators/<slug>/config.json
 node build/fetch.mjs <slug>                   # lists their channel(s), pulls captions (yt-dlp)
 node build/index.mjs <slug>                   # builds creators/<slug>/corpus.json + featured.json
+OPENROUTER_API_KEY=... node build/tag-lanes.mjs <slug>   # Jev tags each clip's topic (config.jev.lanes)
 python build/contact_sheets.py creators/<slug>/unscreened.json /tmp/sheets   # QA: who is on camera?
 node build/use.mjs <slug>                     # makes <slug> what this deploy serves (copies into data/)
 npm test
@@ -68,16 +69,28 @@ every field. The important ones are:
   and follow-ups. Each moment is a source id plus a passage. **`api/_verify.js`**
   keeps it only if the passage appears word for word inside one unbroken run of the
   creator's lines, and takes the start second from there. Anything else is dropped.
-- **`api/_jev.js`** decides **which components come back**. Jev, TypeSafe's System
-  One decision model (served by OpenRouter at `/api/v1/systemone` with the same key),
-  answers one yes/no question per optional component about what the visitor said:
-  steps, facts, follow-ups, "wants to talk now", and each of the creator's
-  `config.cards` (a demo card, a pricing card and so on). It returns calibrated
-  probabilities in about half a second and runs alongside the LLM, so it adds no
-  wait. Code applies the thresholds. The LLM only writes the words inside the
-  components Jev picked. The response is a component list (A2UI-style) that the page
-  renders from a fixed catalog. If Jev is down, the built-in defaults apply and no
-  cards show. Costs about $0.00002 per question.
+- **`api/_jev.js`** molds the page with Jev, TypeSafe's System One decision model.
+  OpenRouter serves it at `/api/v1/systemone`, on the same key. Jev never writes text:
+  it answers typed questions with calibrated odds in about 200 ms for about $0.00004.
+  It decides only what the evidence supports:
+  - **While the answer is written:** the question's topic (`config.jev.lanes`) and its
+    intent (learning, own problem, sizing up the product, wants the creator), plus a
+    yes or no per `config.cards`. A topic or intent counts only if it clears 60%
+    confidence and beats the runner-up by 20 points. Otherwise it stays unknown and the
+    page asks a one-tap question *after* the answer. `config.jev.routes[intent][lane]`
+    picks the main next step. Someone who is just learning gets no pop-up.
+  - **After:** each verified quote is checked to be on point. The "watch next" rail is
+    built from clips in the same topic: they are tagged once at build time
+    (`build/tag-lanes.mjs`, about 1¢ for 550 clips), shortlisted by word overlap, and
+    judged by Jev in small parallel groups.
+  - **As they use it:** opened clips, tapped cards and one-tap answers go to
+    `/api/mold`. That re-reads with Jev only, with no LLM, and swaps the main button and
+    cards. Their own answers beat inference, and what was learned stays in their browser.
+  - Guesses change the layout, never the wording of the answer. "Why this page?" on each
+    answer shows what Jev decided, how sure it was, and what it declined to decide.
+- **`for-creators.html`** is the sales page for creators: four real visitors and the
+  page each one got (from `creators/<slug>/demo.json`, saved live responses, so page
+  views cost nothing), how it decides, and what it won't do.
 - **`api/lead.js`** POSTs the brief as JSON to `LEAD_WEBHOOK_URL` (Zapier, Make, n8n
   or a CRM). Without that URL it reports `sent: false`, and the page says plainly
   that nothing was sent.

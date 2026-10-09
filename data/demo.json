@@ -1,0 +1,465 @@
+{
+ "generated": "2026-10-09",
+ "visitors": [
+  {
+   "who": "A plumber losing calls",
+   "q": "I run a plumbing company and I miss half my calls when I'm under a sink. What should I do?",
+   "title": "Stop losing calls while you’re under a sink",
+   "primary": {
+    "id": "call_demo",
+    "label": "Call Kai: 417-835-0402",
+    "url": "tel:+14178350402"
+   },
+   "popup": true,
+   "components": [
+    {
+     "type": "answer"
+    },
+    {
+     "type": "moment",
+     "title": "Why Plumbers Lose Jobs in 90 Seconds",
+     "quote": "So, here's what actually happens when a plumber misses the call. The customer is not going to leave a voicemail. Nobody leaves voicemails anymore. They hang up.",
+     "t": 0,
+     "thumb": "https://i.ytimg.com/vi/BktLErYtakA/hqdefault.jpg"
+    },
+    {
+     "type": "steps"
+    },
+    {
+     "type": "rail",
+     "clips": [
+      {
+       "title": "this is why I made kaicalls because you don't mean to always be by your phone",
+       "thumb": "https://i.ytimg.com/vi/uebBf1RALFw/hqdefault.jpg"
+      },
+      {
+       "title": "Water through the ceiling at midnight: emergency plumbing triage",
+       "thumb": "https://i.ytimg.com/vi/Cb-l96IZNTc/hqdefault.jpg"
+      },
+      {
+       "title": "Content does not matter if the lead calls and nobody picks up",
+       "thumb": "https://i.ytimg.com/vi/BEkv8huOkxQ/hqdefault.jpg"
+      },
+      {
+       "title": "The Math on Missed Calls Nobody Tracks",
+       "thumb": "https://i.ytimg.com/vi/PefAXW_t3tU/hqdefault.jpg"
+      }
+     ]
+    },
+    {
+     "type": "facts"
+    },
+    {
+     "type": "card",
+     "id": "kaicalls_demo",
+     "title": "Call Kai, the AI secretary"
+    },
+    {
+     "type": "followups"
+    }
+   ],
+   "read": {
+    "why": [
+     {
+      "q": "Topic",
+      "answer": "missed_calls",
+      "confidence": 1,
+      "probabilities": {
+       "missed_calls": 1,
+       "agents": 0,
+       "solo_company": 0,
+       "customers": 0,
+       "kaicalls": 0,
+       "other": 0
+      },
+      "by": "Jev"
+     },
+     {
+      "q": "What they want",
+      "answer": "own_problem",
+      "confidence": 0.93,
+      "probabilities": {
+       "asking": 0.03,
+       "own_problem": 0.95,
+       "evaluating": 0.02,
+       "wants_creator": 0
+      },
+      "by": "Jev"
+     },
+     {
+      "q": "Card: Call Kai, the AI secretary",
+      "answer": "show",
+      "confidence": 0.98,
+      "by": "Jev"
+     },
+     {
+      "q": "Card: From $10 a month",
+      "answer": "hide",
+      "confidence": 0.02,
+      "by": "Jev"
+     },
+     {
+      "q": "Card: 30 minutes with Connor",
+      "answer": "hide",
+      "confidence": 0.1,
+      "by": "Jev"
+     },
+     {
+      "q": "More videos",
+      "answer": "4 of 16 “Missed calls & answering the phone” clips judged worth watching next",
+      "by": "Jev"
+     }
+    ],
+    "declined": [],
+    "jev_ms": 225,
+    "judge_ms": 279,
+    "jev_cost": 0.000137,
+    "llm_cost": 0.00196
+   }
+  },
+  {
+   "who": "A developer whose agents lie",
+   "q": "My coding agents keep telling me a task is done when it isn't. How do I stop that?",
+   "title": "Your coding agents need a verifiable definition of “done”",
+   "primary": {
+    "id": "book_call",
+    "label": "Book 30 min with Connor",
+    "url": "https://www.kaicalls.com/l/XJmd7BiX"
+   },
+   "popup": true,
+   "components": [
+    {
+     "type": "answer"
+    },
+    {
+     "type": "moment",
+     "title": "AI agents think they're done when they're not",
+     "quote": "A repo existing isn't a demo playing. A page rendering isn't a page that actually does the job. It's just that the agent quietly swaps out I produced output for this output is good, and those are very different claims.",
+     "t": 34,
+     "thumb": "https://i.ytimg.com/vi/DzbJkGnc-r4/hqdefault.jpg"
+    },
+    {
+     "type": "more_moments",
+     "n": 2
+    },
+    {
+     "type": "steps"
+    },
+    {
+     "type": "rail",
+     "clips": [
+      {
+       "title": "Making 'done' mean something",
+       "thumb": "https://i.ytimg.com/vi/O0dE8I-Sf7I/hqdefault.jpg"
+      },
+      {
+       "title": "Loops vs Goals How I Structure Agents That Actually Finish",
+       "thumb": "https://i.ytimg.com/vi/gG23EsILDiQ/hqdefault.jpg"
+      },
+      {
+       "title": "How I Set Up Agent Loops to Build on Autopilot",
+       "thumb": "https://i.ytimg.com/vi/hI7L1-jmzdg/hqdefault.jpg"
+      },
+      {
+       "title": "Context rot is why your coding agent keeps choking",
+       "thumb": "https://i.ytimg.com/vi/ZOHHaYgGDE0/hqdefault.jpg"
+      }
+     ]
+    },
+    {
+     "type": "facts"
+    },
+    {
+     "type": "followups"
+    }
+   ],
+   "read": {
+    "why": [
+     {
+      "q": "Topic",
+      "answer": "agents",
+      "confidence": 1,
+      "probabilities": {
+       "missed_calls": 0,
+       "agents": 1,
+       "solo_company": 0,
+       "customers": 0,
+       "kaicalls": 0,
+       "other": 0
+      },
+      "by": "Jev"
+     },
+     {
+      "q": "What they want",
+      "answer": "own_problem",
+      "confidence": 0.87,
+      "probabilities": {
+       "asking": 0.1,
+       "own_problem": 0.9,
+       "evaluating": 0,
+       "wants_creator": 0
+      },
+      "by": "Jev"
+     },
+     {
+      "q": "Card: Call Kai, the AI secretary",
+      "answer": "hide",
+      "confidence": 0.3,
+      "by": "Jev"
+     },
+     {
+      "q": "Card: From $10 a month",
+      "answer": "hide",
+      "confidence": 0.01,
+      "by": "Jev"
+     },
+     {
+      "q": "Card: 30 minutes with Connor",
+      "answer": "hide",
+      "confidence": 0.05,
+      "by": "Jev"
+     },
+     {
+      "q": "More videos",
+      "answer": "4 of 16 “Building with AI agents” clips judged worth watching next",
+      "by": "Jev"
+     }
+    ],
+    "declined": [],
+    "jev_ms": 165,
+    "judge_ms": 294,
+    "jev_cost": 0.000144,
+    "llm_cost": 0.00222
+   }
+  },
+  {
+   "who": "Someone sizing up the product",
+   "q": "How much does KaiCalls cost?",
+   "title": "You’re asking what KaiCalls costs",
+   "primary": {
+    "id": "try_kaicalls",
+    "label": "Try KaiCalls",
+    "url": "https://www.kaicalls.com/start"
+   },
+   "popup": true,
+   "components": [
+    {
+     "type": "answer"
+    },
+    {
+     "type": "moment",
+     "title": "most phone tools charge per seat",
+     "quote": "For our system, for Kai Calls, you only pay for the phone line. Everything else comes included. You can have 20 people in there checking your CRM details. I don't care.",
+     "t": 28,
+     "thumb": "https://i.ytimg.com/vi/wCJMXpT057E/hqdefault.jpg"
+    },
+    {
+     "type": "steps"
+    },
+    {
+     "type": "rail",
+     "clips": [
+      {
+       "title": "KaiCalls vs RingCentral + Smith.ai — the actual cost breakdown",
+       "thumb": "https://i.ytimg.com/vi/qAjDpG0ipyI/hqdefault.jpg"
+      },
+      {
+       "title": "xAI Voice Builder vs KaiCalls — What You Actually Get",
+       "thumb": "https://i.ytimg.com/vi/fM7gwhz7EHE/hqdefault.jpg"
+      }
+     ]
+    },
+    {
+     "type": "facts"
+    },
+    {
+     "type": "card",
+     "id": "pricing",
+     "title": "From $10 a month"
+    },
+    {
+     "type": "card",
+     "id": "kaicalls_demo",
+     "title": "Call Kai, the AI secretary"
+    },
+    {
+     "type": "followups"
+    }
+   ],
+   "read": {
+    "why": [
+     {
+      "q": "Topic",
+      "answer": "kaicalls",
+      "confidence": 1,
+      "probabilities": {
+       "missed_calls": 0,
+       "agents": 0,
+       "solo_company": 0,
+       "customers": 0,
+       "kaicalls": 1,
+       "other": 0
+      },
+      "by": "Jev"
+     },
+     {
+      "q": "What they want",
+      "answer": "evaluating",
+      "confidence": 0.92,
+      "probabilities": {
+       "asking": 0.06,
+       "own_problem": 0,
+       "evaluating": 0.94,
+       "wants_creator": 0
+      },
+      "by": "Jev"
+     },
+     {
+      "q": "Card: Call Kai, the AI secretary",
+      "answer": "show",
+      "confidence": 0.76,
+      "by": "Jev"
+     },
+     {
+      "q": "Card: From $10 a month",
+      "answer": "show",
+      "confidence": 0.97,
+      "by": "Jev"
+     },
+     {
+      "q": "Card: 30 minutes with Connor",
+      "answer": "hide",
+      "confidence": 0.04,
+      "by": "Jev"
+     },
+     {
+      "q": "More videos",
+      "answer": "2 of 16 “KaiCalls itself” clips judged worth watching next",
+      "by": "Jev"
+     }
+    ],
+    "declined": [],
+    "jev_ms": 177,
+    "judge_ms": 216,
+    "jev_cost": 0.000134,
+    "llm_cost": 0.00188
+   }
+  },
+  {
+   "who": "Someone who just typed “help”",
+   "q": "help",
+   "title": "You’re looking for help",
+   "primary": {
+    "id": "watch_more",
+    "label": "More from Connor on YouTube",
+    "url": "https://www.youtube.com/@connorgallic"
+   },
+   "popup": false,
+   "components": [
+    {
+     "type": "answer"
+    },
+    {
+     "type": "no_moment"
+    },
+    {
+     "type": "steps"
+    },
+    {
+     "type": "rail",
+     "clips": [
+      {
+       "title": "you signed up for an ai phone agent but now someone has to manage it — write prompts, set",
+       "thumb": "https://i.ytimg.com/vi/yle9uhD2j1o/hqdefault.jpg"
+      },
+      {
+       "title": "What You Actually Need Before AI Agents Can Run Your Marketing",
+       "thumb": "https://i.ytimg.com/vi/zDeq17zlxpk/hqdefault.jpg"
+      },
+      {
+       "title": "use ai in your business",
+       "thumb": "https://i.ytimg.com/vi/rEt5zxl3kiA/hqdefault.jpg"
+      }
+     ]
+    },
+    {
+     "type": "clarify",
+     "question": "Which is this closest to?",
+     "options": [
+      "Missed calls & answering the phone",
+      "Building with AI agents",
+      "Running a one-person company with AI",
+      "Getting customers & marketing",
+      "KaiCalls itself"
+     ]
+    },
+    {
+     "type": "offer"
+    },
+    {
+     "type": "followups"
+    }
+   ],
+   "read": {
+    "why": [
+     {
+      "q": "What they want",
+      "answer": "asking",
+      "confidence": 0.88,
+      "probabilities": {
+       "asking": 0.91,
+       "own_problem": 0.07,
+       "evaluating": 0.01,
+       "wants_creator": 0.01
+      },
+      "by": "Jev"
+     },
+     {
+      "q": "Card: Call Kai, the AI secretary",
+      "answer": "hide",
+      "confidence": 0.36,
+      "by": "Jev"
+     },
+     {
+      "q": "Card: From $10 a month",
+      "answer": "hide",
+      "confidence": 0.04,
+      "by": "Jev"
+     },
+     {
+      "q": "Card: 30 minutes with Connor",
+      "answer": "hide",
+      "confidence": 0.32,
+      "by": "Jev"
+     },
+     {
+      "q": "More videos",
+      "answer": "3 of 16 candidate clips judged worth watching next",
+      "by": "Jev"
+     }
+    ],
+    "declined": [
+     {
+      "q": "Topic",
+      "answer": "other",
+      "confidence": 1,
+      "probabilities": {
+       "missed_calls": 0,
+       "agents": 0,
+       "solo_company": 0,
+       "customers": 0,
+       "kaicalls": 0,
+       "other": 1
+      },
+      "by": "Jev",
+      "reason": "under 60% sure, so the page doesn't act on it"
+     }
+    ],
+    "jev_ms": 181,
+    "judge_ms": 428,
+    "jev_cost": 0.000118,
+    "llm_cost": 0.00174
+   }
+  }
+ ]
+}

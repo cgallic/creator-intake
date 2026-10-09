@@ -161,8 +161,9 @@
   "disclaimer": "Answers on this page are written by an AI from Connor Gallic's own published YouTube videos. Quotes are shown exactly as captioned and play from the second he says them. General information, not professional advice.",
   "footer": "© 2026 Connor Gallic · connorgallic.com",
   "powered_by": {
-    "label": "Want an “Ask me” page like this for your own channel? Book a call with Connor →",
-    "url": "https://www.kaicalls.com/l/XJmd7BiX"
+    "label": "Want an “Ask me” page like this for your own channel? See how it works →",
+    "url": "./for-creators",
+    "book_url": "https://www.kaicalls.com/l/XJmd7BiX"
   },
   "theme": {
     "paper": "#f3f1ec",
