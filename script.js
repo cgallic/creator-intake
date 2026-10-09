@@ -607,15 +607,19 @@ function renderSheet(f) {
   const o = C.offer, form = o.form || {};
   const n = factPairs(f).slice(0, 4).map(([, v]) => v);
   const timing = form.timing || { label: "How soon do you want to hear back?", options: ["Today", "This week", "No rush"] };
+  // When Jev picked a different offer than the creator's default, the sheet leads with that offer.
+  const picked = primary && primary.url !== o.url ? primary : null;
+  const noted = `<p class="sheet-p">${n.length ? `We've already noted <b>${esc(n.join(" · "))}</b> from what you told us — no need to repeat it.` : "We'll start from what you already told us."}</p>`;
   sheetBody.innerHTML = `
-    <span class="sheet-kicker">● ${esc(o.name)}</span>
-    <h2 class="sheet-h">${esc(o.sheet_heading || `Want ${WHO} to look at this?`)}</h2>
-    <p class="sheet-p">${n.length ? `We've already noted <b>${esc(n.join(" · "))}</b> from what you told us — no need to repeat it.` : "We'll start from what you already told us."}</p>
+    <span class="sheet-kicker">● ${esc(picked ? "Best next step for you" : o.name)}</span>
+    <h2 class="sheet-h">${esc(picked ? picked.label : o.sheet_heading || `Want ${WHO} to look at this?`)}</h2>
+    ${picked ? `${picked.blurb ? `<p class="sheet-p">${esc(picked.blurb)}</p>` : ""}${(picked.points || []).length ? `<ul class="o-points sheet-points">${picked.points.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}` : noted}
 
     ${offerButton("call-big", 'data-track="sheet-offer"')}
-    <p class="call-sub">${esc(o.note || "")}</p>
+    <p class="call-sub">${esc(picked ? picked.price || "" : o.note || "")}</p>
 
     <div class="or-rule">${esc(form.or_label || `or have ${WHO}'s team reach out`)}</div>
+    ${picked ? noted : ""}
 
     <div class="survey-q">
       <span class="ql">${esc(timing.label)}</span>

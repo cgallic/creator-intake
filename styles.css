@@ -592,6 +592,16 @@ body.booting .shell { visibility: hidden; }
 .o-row .o-meter i { background: var(--ink-faint); }
 .o-row-fit { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 .o-row:hover .o-row-name { color: var(--accent); }
+.sheet-points { color: var(--ink-soft); margin: 4px 0 16px; }
+.sheet-points li::before { border-color: var(--accent); }
+/* phones: the answer and its clip, then the offer, then everything else */
+@media (max-width: 920px) {
+  .answer-grid { gap: 20px; }
+  .answer-grid > .col { display: contents; }
+  .answer-grid > .col > * { order: 2; }
+  .answer-grid > .col:first-child > :nth-child(-n+2) { order: 0; }
+  .answer-grid .offers-stack { order: 1; }
+}
 .deal { animation: odeal 0.6s cubic-bezier(.2,.9,.25,1.15) both; }
 @keyframes odeal { from { opacity: 0; transform: translateY(18px) rotate(-1.5deg) scale(0.97); } }
 @media (prefers-reduced-motion: reduce) { .deal { animation: none; } .o-meter i { transition: none; } }
