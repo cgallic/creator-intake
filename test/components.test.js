@@ -131,11 +131,13 @@ test("custom offers: Jev's clear pick becomes the next step; a close call keeps 
   assert.strictEqual(lead.primary.id, "course", "52% vs 34% is a clear lead even at modest confidence");
   assert.strictEqual(lead.alternate, null);
   const spread = mold(cfg, read({ offer: choice("course", { course: 0.34, book: 0.33, watch: 0.33 }, 0.2) }));
-  assert.strictEqual(spread.primary.id, "book", "spread odds fall back to the default");
+  assert.strictEqual(spread.primary.id, "course", "spread odds still lead with the best fit");
+  assert.strictEqual(spread.alternate.id, "book", "and keep the default beside it");
   assert.ok(spread.declined.some((d) => d.q === "Offer"));
   const loose = mold(cfg, read({ offer: choice("course", { course: 0.42, watch: 0.29, book: 0.28 }, 0.3) }));
   assert.strictEqual(loose.primary.id, "course", "42% vs a 28% default: the leader leads, never the lower default");
   assert.strictEqual(loose.alternate.id, "book", "the default stays beside it");
-  const near = mold(cfg, read({ offer: choice("course", { course: 0.39, book: 0.31, watch: 0.30 }, 0.3) }));
-  assert.strictEqual(near.primary.id, "course", "8 points ahead of the default still leads; the hero is never below a row");
+  const near = mold(cfg, read({ offer: choice("watch", { watch: 0.38, book: 0.35, course: 0.27 }, 0.3) }));
+  assert.strictEqual(near.primary.id, "watch", "a 3-point lead still leads; the hero is never below a row");
+  assert.strictEqual(near.alternate.id, "book");
 });
