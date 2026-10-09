@@ -525,3 +525,6 @@ body.booting .shell { visibility: hidden; }
   .ask-go { justify-content: center; padding: 13px 20px; }
   .wordmark-sub { display: none; }
 }
+.powered { margin-top: 10px; font-size: 14px; }
+.powered a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.powered a:hover { text-decoration: underline; }

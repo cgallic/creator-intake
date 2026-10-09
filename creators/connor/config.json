@@ -6,7 +6,10 @@
   "tagline": "Connor Gallic · founder, KaiCalls",
   "about": "Connor Gallic is a founder in Puerto Rico who builds AI automation for small businesses and runs KaiCalls, an AI secretary that answers a business's phone, takes messages and books jobs. He posts short videos almost daily about building with AI agents, running a one-person software company, and what actually works for getting customers.",
   "audience": "Business owners, operators and builders who watched Connor's videos and want help with their own situation: missed calls, automating their business with AI, building software with AI agents, or getting their first customers.",
-  "channels": ["https://www.youtube.com/@connorgallic", "https://www.youtube.com/@buildwithkai"],
+  "channels": [
+    "https://www.youtube.com/@connorgallic",
+    "https://www.youtube.com/@buildwithkai"
+  ],
   "speaker": "interview",
   "max_videos": 700,
   "corpus_token_budget": 150000,
@@ -28,11 +31,26 @@
     "button": "Get my answer"
   },
   "chips": [
-    { "label": "I keep missing calls", "query": "I run a small service business and I miss calls while I'm on jobs. What should I do?" },
-    { "label": "Start building with AI", "query": "I'm not a developer. How do I actually start building things with AI agents?" },
-    { "label": "Solo founder with AI", "query": "Can one person really run a software company with AI doing most of the work?" },
-    { "label": "First customers", "query": "I built a product but nobody is signing up. How do I get my first customers?" },
-    { "label": "What to automate first", "query": "What should a small business automate first with AI?" }
+    {
+      "label": "I keep missing calls",
+      "query": "I run a small service business and I miss calls while I'm on jobs. What should I do?"
+    },
+    {
+      "label": "Slow to call leads back",
+      "query": "Leads come in from my website but it takes me hours to get back to them. Does that actually matter?"
+    },
+    {
+      "label": "Start building with AI",
+      "query": "I'm not a developer. How do I actually start building things with AI agents?"
+    },
+    {
+      "label": "Agents say they're done",
+      "query": "My AI agents say the task is done but the work isn't actually finished. How do I fix that?"
+    },
+    {
+      "label": "Small team, big output",
+      "query": "Can one person really run a business with AI agents doing most of the work?"
+    }
   ],
   "proof": [],
   "featured_heading": "Connor already answered most of this, out loud.",
@@ -50,7 +68,14 @@
     "no_moment": "Book 30 minutes and ask him directly.",
     "fallback": "You can book 30 minutes with Connor instead.",
     "form": {
-      "timing": { "label": "How soon?", "options": ["This week", "This month", "Just curious"] },
+      "timing": {
+        "label": "How soon?",
+        "options": [
+          "This week",
+          "This month",
+          "Just curious"
+        ]
+      },
       "or_label": "or send Connor the details",
       "comments_placeholder": "What you're building, what you've tried, a link…",
       "submit_label": "Send this to Connor",
@@ -59,20 +84,56 @@
   },
   "intake": {
     "fields": [
-      { "key": "business", "label": "Business", "description": "Their business or what they're building, only if they said." },
-      { "key": "goal", "label": "Goal", "description": "What they want to happen, in their words." },
-      { "key": "stuck_on", "label": "Stuck on", "description": "The problem or blocker they described." },
-      { "key": "tools", "label": "Tools", "description": "Tools, software or services they mentioned.", "list": true },
-      { "key": "already_tried", "label": "Already tried", "description": "Things they said they already tried.", "list": true, "each": true }
+      {
+        "key": "business",
+        "label": "Business",
+        "description": "Their business or what they're building, only if they said."
+      },
+      {
+        "key": "goal",
+        "label": "Goal",
+        "description": "What they want to happen, in their words."
+      },
+      {
+        "key": "stuck_on",
+        "label": "Stuck on",
+        "description": "The problem or blocker they described."
+      },
+      {
+        "key": "tools",
+        "label": "Tools",
+        "description": "Tools, software or services they mentioned.",
+        "list": true
+      },
+      {
+        "key": "already_tried",
+        "label": "Already tried",
+        "description": "Things they said they already tried.",
+        "list": true,
+        "each": true
+      }
     ]
   },
   "disclaimer": "Answers on this page are written by an AI from Connor Gallic's own published YouTube videos. Quotes are shown exactly as captioned and play from the second he says them. General information, not professional advice.",
   "footer": "© 2026 Connor Gallic · connorgallic.com",
+  "powered_by": {
+    "label": "Want an “Ask me” page like this for your own channel? Book a call with Connor →",
+    "url": "https://calendar.app.google/cwZawdNiKZw7yopH6"
+  },
   "theme": {
-    "paper": "#f3f1ec", "paper_2": "#ebe8e0", "card": "#fbfaf7",
-    "ink": "#15171a", "ink_soft": "#43474d", "ink_faint": "#868a90",
-    "line": "#dedad1", "line_strong": "#c9c4b8",
-    "accent": "#1f5eff", "accent_deep": "#1442b8", "accent_wash": "#e3eaff",
-    "secondary": "#15171a", "secondary_soft": "#33373d", "highlight": "#1f5eff"
+    "paper": "#f3f1ec",
+    "paper_2": "#ebe8e0",
+    "card": "#fbfaf7",
+    "ink": "#15171a",
+    "ink_soft": "#43474d",
+    "ink_faint": "#868a90",
+    "line": "#dedad1",
+    "line_strong": "#c9c4b8",
+    "accent": "#1f5eff",
+    "accent_deep": "#1442b8",
+    "accent_wash": "#e3eaff",
+    "secondary": "#15171a",
+    "secondary_soft": "#33373d",
+    "highlight": "#1f5eff"
   }
 }
