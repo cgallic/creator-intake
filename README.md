@@ -99,6 +99,8 @@ The page notices it is under `/ask` and resolves its assets and API calls there.
 | `OPENROUTER_API_KEY` | the cheap path, used when set. Default model `anthropic/claude-haiku-5.5` |
 | `ANTHROPIC_API_KEY` | used when no OpenRouter key: `claude-opus-5-5` direct |
 | `ANSWER_MODEL` | overrides the model on either backend (e.g. `typesafe/jev-router`) |
+| `ANSWER_DAILY_CAP_USD` | stop answering once the OpenRouter key has spent this much today (default 5) |
+| `ANSWER_MONTHLY_CAP_USD` | same, for the month (default 30) |
 | `ANSWER_IGNORE_PROVIDERS` | OpenRouter provider slugs to never use, comma-separated |
 | `LEAD_WEBHOOK_URL` | where leads go; optional |
 | `ANSWER_LIMIT_PER_HOUR` | questions per visitor per hour, per function instance (default 30) |
@@ -108,7 +110,12 @@ The page notices it is under `/ask` and resolves its assets and API calls there.
 
 With Haiku 5.5 on OpenRouter, a question costs about $0.002 once the corpus is
 cached and about $0.015 when it isn't (~140k input tokens plus ~1.5k output). Opus
-direct costs about $0.05–0.07. The response includes `cost` when OpenRouter reports it. The rate limits are best effort only. Before a big public
+direct costs about $0.05–0.07. The response includes `cost` when OpenRouter reports it. **The spend cap is the real guard.** Before each question, `api/answer.js` reads the
+OpenRouter key's own running total (`usage_daily`, `usage_monthly`). Once either cap
+is reached it stops answering, and the page shows the offer instead. The caps count
+everything spent on that key, so give each deploy a key of its own; set a credit
+limit on that key in OpenRouter too, as a hard ceiling. The per-visitor rate limits
+are best effort only. Before a big public
 push, add a Vercel Firewall rate-limit rule on `/api/answer`.
 
 YouTube captions are auto-generated, so a quote is exactly what the captions say,

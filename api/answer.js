@@ -171,6 +171,30 @@ async function askAnthropic(q) {
 
 const ask = (q) => (process.env.OPENROUTER_API_KEY ? askOpenRouter(q) : askAnthropic(q));
 
+/* Spend cap. OpenRouter keeps a running total per key (usage_daily / usage_monthly,
+   in USD). Before each question we read it (cached 30s per instance) and stop
+   answering once either cap is hit. The counter is per key, so if the key is
+   shared with another app, that app's spend counts too and the cap trips early;
+   a key of its own makes the cap exact. Fails closed: if the counter can't be
+   read, we don't answer. */
+const DAILY_CAP = +(process.env.ANSWER_DAILY_CAP_USD || 5);
+const MONTHLY_CAP = +(process.env.ANSWER_MONTHLY_CAP_USD || 30);
+let spend = { at: 0, daily: 0, monthly: 0 };
+async function overCap() {
+  if (!process.env.OPENROUTER_API_KEY) return false;
+  if (Date.now() - spend.at > 30e3) {
+    try {
+      const r = await fetch("https://openrouter.ai/api/v1/key", { headers: { authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` } });
+      const d = (await r.json()).data || {};
+      spend = { at: Date.now(), daily: +d.usage_daily || 0, monthly: +d.usage_monthly || 0 };
+    } catch (e) {
+      console.error("spend check failed:", e && e.message);
+      return true;
+    }
+  }
+  return spend.daily >= DAILY_CAP || spend.monthly >= MONTHLY_CAP;
+}
+
 // Best-effort, per function instance. A visitor is the page's random visitor id
 // (x-visitor), falling back to IP: behind a proxy rewrite (e.g. connorgallic.com/ask)
 // every request arrives from the proxy's IP. ANSWER_CAP_PER_HOUR is the spend guard
@@ -194,6 +218,10 @@ module.exports = async (req, res) => {
   if (!q) return res.status(400).json({ error: "Missing 'q'." });
   const visitor = String(req.headers["x-visitor"] || "").slice(0, 64) || String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "").split(",")[0].trim();
   if (limited(visitor)) return res.status(429).json({ error: "That's a lot of questions for one hour. Try again a little later." });
+  if (await overCap()) {
+    console.warn("answer: spend cap reached", JSON.stringify({ daily: spend.daily, monthly: spend.monthly, DAILY_CAP, MONTHLY_CAP }));
+    return res.status(429).json({ error: `${WHO} is taking a breather from answering here today. ${config.offer.fallback || ""}`.trim() });
+  }
 
   try {
     const out = await ask(q);
