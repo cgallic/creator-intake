@@ -138,7 +138,8 @@ module.exports = async (req, res) => {
     if (q.a === "lifetime_done") {
       const sid = String(b.session_id || "");
       if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(sid) || !process.env.STRIPE_SECRET_KEY) return res.status(404).json({ error: "not found" });
-      const s = await stripe(`checkout/sessions/${sid}`);
+      const s = await stripe(`checkout/sessions/${sid}`).catch(() => null);
+      if (!s) return res.status(404).json({ error: "not found" });
       if (s.metadata?.kind !== "lifetime" || s.payment_status !== "paid") return res.status(402).json({ error: "We couldn't confirm the payment yet. If you paid, refresh in a minute." });
       const slug = SLUG.test(s.metadata.slug || "") ? s.metadata.slug : null;
       await store.putJSON(`lifetime/${sid}.json`, { session: sid, slug, amount: s.amount_total, at: new Date().toISOString() });
