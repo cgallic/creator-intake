@@ -327,7 +327,7 @@ body.answering #homepage { display: none; }
 .fact-chip .fv { font-size: 14.5px; color: var(--ink); font-weight: 500; }
 .fact-chip .fv.inferred::after { content: "you said it"; font-family: var(--mono); font-size: 9px; color: var(--secondary); border: 1px solid var(--secondary-soft); border-radius: 4px; padding: 1px 5px; margin-left: 7px; vertical-align: 1px; text-transform: uppercase; letter-spacing: 0.06em; }
 
-.brief-cta { width: 100%; margin-top: 18px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-family: var(--sans); font-weight: 700; font-size: 16px; color: #fff; background: var(--accent); border: none; border-radius: 14px; padding: 15px; cursor: pointer; transition: all 0.2s var(--ease); box-shadow: var(--shadow-sm); }
+.brief-cta { box-sizing: border-box; text-decoration: none; width: 100%; margin-top: 18px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-family: var(--sans); font-weight: 700; font-size: 16px; color: #fff; background: var(--accent); border: none; border-radius: 14px; padding: 15px; cursor: pointer; transition: all 0.2s var(--ease); box-shadow: var(--shadow-sm); }
 .brief-cta:hover { background: var(--accent-deep); transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .brief-note { font-size: 11.5px; color: var(--ink-faint); text-align: center; margin: 10px 0 0; }
 

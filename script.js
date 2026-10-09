@@ -278,7 +278,9 @@ const CATALOG = {
     <div class="panel d2"><div class="panel-pad">
       <span class="panel-tag live"><span class="dot"></span>What you've told us</span>
       <div class="facts-list">${factRows(c.facts)}</div>
-      <button class="brief-cta" data-open-sheet>${esc(C.offer.brief_cta || C.offer.cta_label)}</button>
+      ${C.preview && C.preview.unofficial
+        ? offerButton("brief-cta") /* a preview has no one to send the details to: just the next step */
+        : `<button class="brief-cta" data-open-sheet>${esc(C.offer.brief_cta || C.offer.cta_label)}</button>`}
       <p class="brief-note">${esc(C.offer.note || "")}</p>
     </div></div>`,
   offer: () => {
