@@ -112,3 +112,19 @@ test("the answer endpoint: Jev read + judged videos come back as components", as
   const rail = res.body.components.find((c) => c.type === "rail");
   assert.ok(rail.clips.length <= 4 && rail.clips.every((c) => c.source_id !== quoted.id));
 });
+
+test("custom offers: Jev's clear pick becomes the next step; a close call keeps the default", () => {
+  const cfg = { ...config, jev: { ...config.jev, pick_offer: true, moves: {
+    book: { label: "Book", url: "https://book", when: "wants to talk" },
+    course: { label: "The course", url: "https://course", when: "wants to learn it" },
+    watch: { label: "Watch more", url: "https://yt", when: "just curious" },
+  } } };
+  const q = readQuestions(cfg);
+  assert.deepStrictEqual(Object.keys(q.offer.criteria).sort(), ["book", "course", "watch"]);
+  const clear = mold(cfg, read({ offer: choice("course", { course: 0.8, book: 0.15, watch: 0.05 }, 0.8) }));
+  assert.strictEqual(clear.primary.id, "course");
+  assert.strictEqual(clear.offers.find((o) => o.id === "course").p, 0.8);
+  const close = mold(cfg, read({ offer: choice("course", { course: 0.45, book: 0.4, watch: 0.15 }, 0.45) }));
+  assert.strictEqual(close.primary.id, "book");
+  assert.ok(close.declined.some((d) => d.q === "Offer"));
+});

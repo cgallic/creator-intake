@@ -228,23 +228,33 @@
     "moves": {
       "book_call": {
         "label": "Book 30 min with Connor",
-        "url": "https://www.kaicalls.com/l/XJmd7BiX"
+        "url": "https://www.kaicalls.com/l/XJmd7BiX",
+        "when": "They want to talk to Connor, hire him, or get hands-on help with their own business or AI setup.",
+        "blurb": "Free 30 minutes with Connor"
       },
       "try_kaicalls": {
         "label": "Try KaiCalls",
-        "url": "https://www.kaicalls.com/start"
+        "url": "https://www.kaicalls.com/start",
+        "when": "They run a business that misses calls and are ready to try an AI secretary now.",
+        "blurb": "AI secretary, from $10/mo"
       },
       "call_demo": {
         "label": "Call Kai: 417-835-0402",
-        "url": "tel:+14178350402"
+        "url": "tel:+14178350402",
+        "when": "They want to hear what an AI phone secretary sounds like before deciding anything.",
+        "blurb": "Call Kai and hear it answer"
       },
       "read_book": {
         "label": "Read the free book",
-        "url": "https://book.kaicalls.com"
+        "url": "https://book.kaicalls.com",
+        "when": "They want to learn about missed calls, answering the phone and automation in a small business, at their own pace.",
+        "blurb": "Free book: Money Walking Out the Door"
       },
       "watch_more": {
         "label": "More from Connor on YouTube",
-        "url": "https://www.youtube.com/@connorgallic"
+        "url": "https://www.youtube.com/@connorgallic",
+        "when": "They're learning about building with AI agents or running a one-person company and want more of Connor's videos.",
+        "blurb": "More from Connor on YouTube"
       }
     },
     "default_move": "book_call",
@@ -275,6 +285,7 @@
       "own_problem": "Fixing my own problem",
       "evaluating": "Checking out KaiCalls",
       "wants_creator": "Talking to Connor"
-    }
+    },
+    "pick_offer": true
   }
 }

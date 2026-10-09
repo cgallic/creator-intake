@@ -52,8 +52,12 @@ function readQuestions(config) {
     intent: { type: "choice", instructions: `What does the person who wrote \`said\` want from ${config.short_name}'s page right now? \`did_on_page\` is what they have done here since asking; it outweighs the wording of \`said\`.`, criteria: Object.fromEntries(Object.entries(INTENTS).map(([k, v]) => [k, v.when])) },
   };
   for (const card of config.cards || []) q[`card_${card.id}`] = { type: "noul", instructions: card.when };
+  // Custom offers: with jev.pick_offer, Jev also chooses which of the creator's offers fits this person.
+  const offers = offerList(config);
+  if (offers.length > 1) q.offer = { type: "choice", instructions: `Which of ${config.short_name}'s offers fits the person who wrote \`said\` best? Use \`did_on_page\` too.`, criteria: Object.fromEntries(offers.map(([id, m]) => [id, m.when])) };
   return q;
 }
+const offerList = (config) => (config.jev && config.jev.pick_offer ? Object.entries(config.jev.moves || {}).filter(([, m]) => m.when) : []);
 
 async function read(config, said, { history = [], did = [], cameFrom = "" } = {}) {
   const state = { said, earlier_questions: history.slice(-4), did_on_page: did.slice(-12), came_from: cameFrom || "unknown", creator: `${config.name}: ${config.about}` };
@@ -80,9 +84,18 @@ function mold(config, r, told = {}) {
   const lane = settle("lane", j.lanes, "Topic");
   const intent = settle("intent", INTENTS, "What they want");
 
-  // Primary next step: routes[intent][lane] -> routes[intent]["*"] -> default.
-  const route = (intent && j.routes[intent]) || {};
-  const moveId = (lane && route[lane]) || route["*"] || j.default_move;
+  // Primary next step: Jev's offer pick when it's clear -> routes[intent][lane] -> routes[intent]["*"] -> default.
+  const route = (intent && (j.routes || {})[intent]) || {};
+  let moveId = (lane && route[lane]) || route["*"] || j.default_move;
+  let offerOdds = null;
+  const o = a.offer;
+  if (o && o.probabilities) {
+    offerOdds = o.probabilities;
+    const sorted = Object.values(o.probabilities).sort((x, y) => y - x);
+    const clear = (o.confidence ?? 0) >= 0.5 && sorted[0] - (sorted[1] || 0) >= 0.15;
+    if (clear && j.moves[o.choice]) { moveId = o.choice; why.push({ q: "Offer", answer: j.moves[o.choice].label, confidence: o.confidence, by: "Jev" }); }
+    else declined.push({ q: "Offer", answer: o.choice, confidence: o.confidence ?? 0, reason: "no clear winner, so the page uses the default", by: "Jev" });
+  }
   const m = j.moves[moveId] || j.moves[j.default_move];
   const primary = { id: moveId, label: m.label, url: m.url };
 
@@ -101,6 +114,7 @@ function mold(config, r, told = {}) {
   return {
     decided: !!r,
     lane, intent, primary, cards, clarify,
+    offers: offerOdds ? offerList(config).map(([id, m]) => ({ id, label: m.label, url: m.url, blurb: m.blurb || "", p: offerOdds[id] ?? 0 })) : null,
     show_facts: intent === "own_problem" || intent === "evaluating" || intent === "wants_creator",
     popup: !!intent && intent !== "asking",
     why, declined,

@@ -33,6 +33,7 @@ module.exports = async (req, res) => {
       popup: m.popup,
       clarify: m.clarify,
       show_facts: m.show_facts,
+      offers: m.offers,
       cards: m.cards.map((c) => ({ type: "card", column: "side", id: c.id, kicker: c.kicker, title: c.title, body: c.body, button: c.button, secondary: c.secondary })),
       read: { lane: m.lane, intent: m.intent, why: m.why, declined: m.declined, jev: { model: r.model, ms: r.ms, cost: r.cost } },
     });
