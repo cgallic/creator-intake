@@ -98,7 +98,8 @@ The page notices it is under `/ask` and resolves its assets and API calls there.
 |---|---|
 | `OPENROUTER_API_KEY` | the cheap path, used when set. Default model `anthropic/claude-haiku-5.5` |
 | `ANTHROPIC_API_KEY` | used when no OpenRouter key: `claude-opus-5-5` direct |
-| `ANSWER_MODEL` | overrides the model on either backend |
+| `ANSWER_MODEL` | overrides the model on either backend (e.g. `typesafe/jev-router`) |
+| `ANSWER_IGNORE_PROVIDERS` | OpenRouter provider slugs to never use, comma-separated |
 | `LEAD_WEBHOOK_URL` | where leads go; optional |
 | `ANSWER_LIMIT_PER_HOUR` | questions per visitor per hour, per function instance (default 30) |
 | `ANSWER_CAP_PER_HOUR` | questions across all visitors per hour, per function instance (default 300): the spend guard |

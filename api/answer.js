@@ -137,6 +137,9 @@ async function askOpenRouter(q) {
       ],
       response_format: { type: "json_schema", json_schema: { name: "answer", strict: true, schema: SCHEMA } },
       usage: { include: true },
+      // ANSWER_IGNORE_PROVIDERS: comma-separated OpenRouter provider slugs a router
+      // model must not route to (e.g. "google-vertex,google-ai-studio").
+      ...(process.env.ANSWER_IGNORE_PROVIDERS ? { provider: { ignore: process.env.ANSWER_IGNORE_PROVIDERS.split(",").map((x) => x.trim()).filter(Boolean) } } : {}),
     }),
   });
   const d = await r.json();
