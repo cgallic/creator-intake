@@ -103,7 +103,7 @@
     },
     {
       "id": "pricing",
-      "when": "Does the person who wrote `said` ask what something costs, about prices or plans, or what it takes to get started?",
+      "when": "Does the person who wrote `said` ask what KaiCalls, an answering service or a receptionist costs, or ask about prices or plans?",
       "threshold": 0.5,
       "kicker": "KaiCalls plans",
       "title": "From $10 a month",

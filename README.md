@@ -64,7 +64,7 @@ every field. The important ones are:
   `corpus_token_budget` (150k tokens by default), so the whole corpus fits in one
   cached prompt.
 - **`api/answer.js`** puts the corpus in a cached system block and asks the model
-  (OpenRouter → Claude Haiku 5.5 by default, or Opus direct; structured output) for an answer, moments, facts
+  (OpenRouter → GPT-6 Luna by default, or Opus direct; structured output) for an answer, moments, facts
   and follow-ups. Each moment is a source id plus a passage. **`api/_verify.js`**
   keeps it only if the passage appears word for word inside one unbroken run of the
   creator's lines, and takes the start second from there. Anything else is dropped.
@@ -106,7 +106,7 @@ The page notices it is under `/ask` and resolves its assets and API calls there.
 
 | Var | |
 |---|---|
-| `OPENROUTER_API_KEY` | the cheap path, used when set. Default model `anthropic/claude-haiku-5.5` |
+| `OPENROUTER_API_KEY` | the cheap path, used when set. Default text model `openai/gpt-6-luna` |
 | `ANTHROPIC_API_KEY` | used when no OpenRouter key: `claude-opus-5-5` direct |
 | `ANSWER_MODEL` | overrides the model on either backend (e.g. `typesafe/jev-router`) |
 | `JEV_MODEL` | Jev version for component decisions (default `typesafe/jev-1.13`, pinned so thresholds stay tuned) |
@@ -120,9 +120,12 @@ The page notices it is under `/ask` and resolves its assets and API calls there.
 
 ## Cost, speed, limits
 
-With Haiku 5.5 on OpenRouter, a question costs about $0.002 once the corpus is
-cached and about $0.015 when it isn't (~140k input tokens plus ~1.5k output). Opus
-direct costs about $0.05–0.07. The response includes `cost` when OpenRouter reports it. **The spend cap is the real guard.** Before each question, `api/answer.js` reads the
+Measured on Connor's corpus (~207k tokens) with GPT-6 Luna on OpenRouter: about
+$0.002 per question once the corpus is cached and $0.02 for the first one, plus about
+$0.00003 for Jev. Claude Haiku 5.5 measured about $0.013 cached, and Opus direct
+about $0.05–0.07. Pin the text model with `ANSWER_MODEL`. A router such as
+`typesafe/jev-router` picks a model per question, so the price varies.
+The response includes `cost` when OpenRouter reports it. **The spend cap is the real guard.** Before each question, `api/answer.js` reads the
 OpenRouter key's own running total (`usage_daily`, `usage_monthly`). Once either cap
 is reached it stops answering, and the page shows the offer instead. The caps count
 everything spent on that key, so give each deploy a key of its own; set a credit

@@ -105,8 +105,8 @@ function shapeMoment(m, v) {
 }
 
 /* ---------- handler ---------- */
-// Two backends, picked by which key is set. OpenRouter (default model: Claude Haiku
-// 5.5, ~$0.10/M input, $0.01/M cached) is the cheap path; ANTHROPIC_API_KEY alone
+// Two backends, picked by which key is set. OpenRouter (default model: GPT-6 Luna,
+// $0.10/M input, $0.01/M cached; measured ~$0.002 per cached question) is the cheap path; ANTHROPIC_API_KEY alone
 // uses Opus directly. ANSWER_MODEL overrides the model on either.
 const RECORD = `<record creator="${config.name}">
 ${CORPUS_TEXT}
@@ -116,7 +116,7 @@ const USER = (q) => `What they told us, in their words:
 let client = null;
 
 async function askOpenRouter(q) {
-  const model = process.env.ANSWER_MODEL || "anthropic/claude-haiku-5.5";
+  const model = process.env.ANSWER_MODEL || "openai/gpt-6-luna";
   const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
