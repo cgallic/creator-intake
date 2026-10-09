@@ -14,7 +14,8 @@
     { "source": "/api/ai/:path*", "destination": "/api/ai?path=:path*" },
     { "source": "/c/:slug/api/:fn", "destination": "/api/:fn?c=:slug" },
     { "source": "/c/:slug/data/:f", "destination": "/api/creator?c=:slug&f=:f" },
-    { "source": "/c/:slug/(styles\.css|script\.js)", "destination": "/$1" },
+    { "source": "/c/:slug/styles.css", "destination": "/styles.css" },
+    { "source": "/c/:slug/script.js", "destination": "/script.js" },
     { "source": "/c/:slug/for-creators", "destination": "/for-creators.html" },
     { "source": "/c/:slug/new", "destination": "/new.html" },
     { "source": "/c/:slug", "destination": "/index.html" }
