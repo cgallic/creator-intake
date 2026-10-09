@@ -2,6 +2,7 @@
  * Claim a preview page: the channel's owner makes it theirs.
  *
  *   GET  /api/claim?c=<slug>                         -> { name, channel, code, claimed, price, paid }
+ *   GET  /api/claim?a=price                          -> { price, paid }  (so pages state the real price)
  *   POST /api/claim?a=start    { c, offer_url, offer_label, webhook_url }  -> { id }
  *        queues a claim job; the build worker checks the code is in the channel
  *        description (only the owner can put it there) and marks the job "verified"
@@ -56,6 +57,7 @@ module.exports = async (req, res) => {
   const q = req.query || {}, b = req.body || {};
   try {
     if (req.method === "GET") {
+      if (q.a === "price") return res.status(200).json({ price: PRICE, paid: paid() });
       const c = String(q.c || "");
       if (!SLUG.test(c)) return res.status(404).json({ error: "not found" });
       const cfg = await store.getJSON(`creators/${c}/config.json`);

@@ -56,7 +56,7 @@
         <input id="ch" type="text" inputmode="url" autocomplete="off" placeholder="youtube.com/@yourname" aria-label="Your YouTube channel" required />
         <button id="go" type="submit">Build my page</button>
       </form>
-      <p class="hint">Free to build and try. If it's your channel, claim it to add your own link. Free during launch.</p>
+      <p class="hint" id="price-hint">Free to build and try. If it's your channel, claim it to add your own link. Free during launch.</p>
       <div id="out"></div>
       <div class="fine">
         <p>Previews are unofficial until the channel's owner claims them, and they're kept out of search engines.</p>
@@ -64,6 +64,14 @@
       </div>
     </div>
     <script>
+        /* Pricing copy follows the server: free with no Stripe key, the real price with one. */
+        fetch("./api/claim?a=price").then((r) => r.json()).then((p) => {
+          if (!p.paid) return;
+          const $$ = (id, t) => { const el = document.getElementById(id); if (el) el.innerHTML = t; };
+          const usd = `$${Math.round(p.price / 100)}`;
+          $$("price-hint", `Free to build and try. If it's your channel, claim it for ${usd} once to add your own link.`);
+        }).catch(() => {});
+
       const $ = (s) => document.querySelector(s);
       const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
       const STEPS = [
