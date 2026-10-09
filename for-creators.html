@@ -143,6 +143,10 @@
       .demo-quote mark { background: var(--caption); color: var(--ink); padding: 1px 3px; border-radius: 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
       .demo-quote small { display: block; margin-top: 8px; font-weight: 800; color: #0f7a3a; font-size: 13.5px; }
       .demo-full { display: inline-block; margin-top: 6px; font-weight: 800; color: var(--caption); }
+      .demo-cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; background: var(--caption); color: var(--ink); font-weight: 800; font-stretch: 110%; text-decoration: none; border-radius: 999px; padding: 12px 18px; }
+      .demo-why { display: block; margin-top: 8px; font-size: 14.5px; color: rgba(255,255,255,0.75); }
+      .demo-why b { color: #fff; font-weight: 700; }
+      .demo-claim { display: block; margin-top: 8px; font-size: 14.5px; color: var(--caption); }
       .demo-empty { color: rgba(255,255,255,0.8); font-size: 15.5px; }
 
       .price-note { font-weight: 600; color: rgba(255,255,255,0.85); font-size: 16px; }
@@ -304,6 +308,7 @@
             <li data-step="1"><span class="n">1</span><div><b>It searches every clip</b><span class="d" id="s1">Every caption line of their videos, each stamped with the second it was said.</span></div></li>
             <li data-step="2"><span class="n">2</span><div><b>It checks the words</b><span class="d" id="s2">The quote has to appear in their captions exactly, word for word, said by them and not a guest.</span></div></li>
             <li data-step="3"><span class="n">3</span><div><b>It plays the moment</b><span class="d" id="s3">From the second they said it, not the start of the video.</span><div id="demo-out"></div></div></li>
+            <li data-step="4"><span class="n">4</span><div><b>It hands them your offer</b><span class="d" id="s4">The next step that fits what this person wants: your call, your course, your product.</span><div id="demo-offer"></div></div></li>
           </ol>
         </div>
       </section>
@@ -527,7 +532,7 @@
           const cfg = demoCfg[p.slug] || {};
           $("#demo-q").placeholder = cfg.hero?.placeholder || `Ask ${p.label} something…`;
           $("#demo-chips").innerHTML = (cfg.chips || []).slice(0, 4).map((c) => `<button type="button" data-q="${esc(c.query)}">${esc(c.label)}</button>`).join("");
-          $("#demo-out").innerHTML = ""; setStep(0);
+          $("#demo-out").innerHTML = ""; $("#demo-offer").innerHTML = ""; setStep(0);
         }
         $("#who-pick").innerHTML = demoPeople.filter((p) => p.label).map((p) => `<button type="button" data-slug="${esc(p.slug)}" aria-pressed="false">${esc("Ask " + p.label)}</button>`).join("");
         $("#who-pick").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) choose(demoPeople.find((p) => p.slug === b.dataset.slug)); });
@@ -537,7 +542,9 @@
 
         async function ask(q) {
           const p = pick, cfg = demoCfg[p.slug] || {};
-          $("#demo-go").disabled = true; $("#demo-out").innerHTML = ""; setStep(1);
+          $("#demo-go").disabled = true; $("#demo-out").innerHTML = ""; $("#demo-offer").innerHTML = ""; setStep(1);
+          // Jev's read of what they want runs alongside the clip search (decision model only, ~$0.00004).
+          const reading = fetch(`${base(p.slug)}api/mold`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ q }) }).then((r) => r.json()).catch(() => null);
           $("#s1").textContent = `Searching ${p.label}'s clips…`;
           const t0 = performance.now();
           let d = { moments: [] };
@@ -549,6 +556,7 @@
             $("#s1").textContent = `Searched ${p.label}'s clips in ${secs}s.`;
             setStep(1);
             $("#demo-out").innerHTML = `<p class="demo-empty">No clip clearly answers that, so it shows nothing rather than guess. <a class="demo-full" href="${esc(base(p.slug))}?q=${encodeURIComponent(q)}">Ask the full page anyway</a></p>`;
+            showOffer(p, cfg, await reading);
             return;
           }
           $("#s1").textContent = `Searched ${p.label}'s clips and found it in ${secs}s.`;
@@ -565,7 +573,28 @@
             </div>`;
           const play = () => { $("#demo-video").innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(m.youtube_id)}?start=${Math.max(0, m.t)}&autoplay=1&rel=0&playsinline=1" title="${esc(m.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`; };
           $("#demo-video").addEventListener("click", play, { once: true });
+          showOffer(p, cfg, await reading);
           $("#demo-video").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); play(); } }, { once: true });
+        }
+
+        function showOffer(p, cfg, m) {
+          setStep(4);
+          const primary = (m && m.primary) || { label: cfg.offer?.cta_label || "Their next step", url: cfg.offer?.url || "#" };
+          const read = (m && m.read) || {};
+          const pct = (x) => (typeof x === "number" ? ` (${Math.round(x * 100)}% sure)` : "");
+          const want = (read.why || []).find((w) => w.q === "What they want");
+          const topic = (read.why || []).find((w) => w.q === "Topic");
+          const wantLabel = want && ((cfg.jev?.intent_labels || {})[want.answer] || want.answer);
+          const topicLabel = topic && (cfg.jev?.lanes?.[topic.answer]?.label || topic.answer);
+          const why = want
+            ? `Jev read this as <b>${esc(wantLabel.toLowerCase())}</b>${pct(want.confidence)}${topicLabel ? `, about <b>${esc(topicLabel.toLowerCase())}</b>` : ""}, so the page leads with:`
+            : `Jev couldn't tell what they're after, so the page shows the default next step and asks them one quick question:`;
+          const ext = /^https?:/.test(primary.url);
+          const preview = cfg.preview && cfg.preview.unofficial;
+          $("#s4").textContent = preview ? `This is a preview, so the only next step is ${p.label}'s own channel.` : `The next step that fits what this person wants.`;
+          $("#demo-offer").innerHTML = `<span class="demo-why">${why}</span>
+            <a class="demo-cta" href="${esc(primary.url)}" ${ext ? 'target="_blank" rel="noopener"' : ""}>${esc(primary.label)} →</a>
+            ${preview ? `<span class="demo-claim">On a claimed page this is the creator's own offer: their call, course or product. <a href="./new" style="color:inherit;font-weight:800">Make one for your channel</a></span>` : ""}`;
         }
 
         /* ---------- gallery: preview pages built from creators people know ---------- */
