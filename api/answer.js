@@ -210,6 +210,23 @@ function limited(who) {
   return mine.length > PER_VISITOR || all.length > PER_INSTANCE;
 }
 
+const jev = require("./_jev");
+
+/* The response is a component list (A2UI-style): the server decides what shows
+   and in which column, the page only renders it. Jev picks the optional pieces;
+   the LLM's text fills them; config.cards supply the creator's fixed cards. */
+function compose(p, moments, picked) {
+  const { on, cards } = picked;
+  const c = [{ type: "answer", column: "main", title: p.title, paras: p.paras }];
+  c.push(moments[0] ? { type: "moment", column: "main", moment: moments[0] } : { type: "no_moment", column: "main" });
+  if (moments.length > 1) c.push({ type: "more_moments", column: "main", moments: moments.slice(1) });
+  if (on.steps && (p.steps || []).length) c.push({ type: "steps", column: "main", steps: p.steps });
+  c.push(on.facts ? { type: "facts", column: "side", facts: p.facts } : { type: "offer", column: "side" });
+  for (const card of cards) c.push({ type: "card", column: "side", id: card.id, kicker: card.kicker, title: card.title, body: card.body, button: card.button, secondary: card.secondary });
+  if (on.followups && (p.followups || []).length) c.push({ type: "followups", column: "side", followups: p.followups });
+  return c;
+}
+
 const fallback = () => `We couldn't answer that here. ${config.offer.fallback || ""}`.trim();
 
 module.exports = async (req, res) => {
@@ -224,7 +241,11 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const out = await ask(q);
+    // Jev (what to show) runs alongside the LLM (what to say), so it adds no wait.
+    const decision = process.env.OPENROUTER_API_KEY && process.env.JEV_OFF !== "1"
+      ? jev.decide(config, q).catch((e) => { console.warn("jev:", e && e.message); return null; })
+      : Promise.resolve(null);
+    const [out, d] = await Promise.all([ask(q), decision]);
     if (out.refusal) return res.status(200).json({ error: fallback() });
     const p = out.parsed;
     const moments = [], dropped = [];
@@ -234,14 +255,16 @@ module.exports = async (req, res) => {
       else if (!v.ok) dropped.push({ source_id: m.source_id, reason: v.reason });
     }
     if (dropped.length) console.warn("answer: dropped unverified moments", JSON.stringify(dropped));
+    const picked = jev.pick(config, d && d.p);
     return res.status(200).json({
       title: p.title,
       paras: p.paras,
-      steps: p.steps,
+      components: compose(p, moments, picked),
+      ui: { popup_after_seconds: picked.on.talk_now ? (config.offer.popup_hot_seconds || 6) : (config.offer.popup_after_seconds || 14) },
       moments,
-      dropped: dropped.length,
       facts: p.facts,
-      followups: p.followups,
+      dropped: dropped.length,
+      decided_by: d ? { model: d.model, ms: d.ms, cost: d.cost, p: d.p } : "defaults (Jev unavailable)",
       model: out.model,
       cache_read_tokens: out.usage?.cache_read_input_tokens ?? null,
       cost: out.usage?.cost ?? null,

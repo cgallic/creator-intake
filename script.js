@@ -182,57 +182,73 @@ function renderError(raw, msg) {
   stickyCall.hidden = false;
 }
 
-/* ---------- the answer environment ---------- */
+/* ---------- the answer environment ----------
+   /api/answer returns `components`: an ordered list, each with a type and a column.
+   Which optional ones are present was decided by Jev on the server; this page only
+   renders them from the catalog below (A2UI-style: the agent picks, the client draws). */
+const CATALOG = {
+  answer: (c) => `
+    <div class="panel d1"><div class="panel-pad">
+      <span class="panel-tag"><span class="dot"></span>Straight answer</span>
+      <div class="synth-body" id="synth-body"></div>
+      <div class="audio-row" id="audio-row" ${canSpeak ? "" : "hidden"}>
+        <button class="audio-play" id="audio-play" aria-label="Play audio answer">${PLAY}</button>
+        <div class="audio-meta"><span class="t">Rather just listen?</span><span class="s">Tap to hear this read out loud</span></div>
+        <div class="audio-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div></div>`,
+  moment: (c) => leadMoment(c.moment),
+  no_moment: () => noMoment(),
+  more_moments: (c) => `
+    <div class="panel d3"><div class="panel-pad">
+      <span class="panel-tag"><span class="dot"></span>${esc(WHO)} talks about this too</span>
+      <div class="clip-list" id="clip-list">${c.moments.map(momentRow).join("")}</div>
+    </div></div>`,
+  steps: (c) => `
+    <div class="panel d4"><div class="panel-pad">
+      <span class="panel-tag"><span class="dot"></span>What to do now</span>
+      <ol class="steps">${c.steps.map((x) => `<li><span class="st">${rich(x)}</span></li>`).join("")}</ol>
+    </div></div>`,
+  facts: (c) => `
+    <div class="panel d2"><div class="panel-pad">
+      <span class="panel-tag live"><span class="dot"></span>What you've told us</span>
+      <div class="facts-list">${factRows(c.facts)}</div>
+      <button class="brief-cta" data-open-sheet>${esc(C.offer.brief_cta || C.offer.cta_label)}</button>
+      <p class="brief-note">${esc(C.offer.note || "")}</p>
+    </div></div>`,
+  offer: () => `
+    <div class="panel d2"><div class="panel-pad">
+      <span class="panel-tag"><span class="dot"></span>${esc(C.offer.name)}</span>
+      <div style="margin-top:12px">${offerButton()}</div>
+      <p class="brief-note">${esc(C.offer.note || "")}</p>
+    </div></div>`,
+  card: (c) => `
+    <div class="panel d3 card-x card-${esc(c.id)}"><div class="panel-pad">
+      <span class="panel-tag"><span class="dot"></span>${esc(c.kicker || "")}</span>
+      <h3 class="card-title">${esc(c.title)}</h3>
+      ${c.body ? `<p class="card-body">${rich(c.body)}</p>` : ""}
+      ${c.button ? `<a class="brief-cta card-btn" href="${esc(c.button.url)}" ${/^https?:/.test(c.button.url) ? 'target="_blank" rel="noopener"' : ""}>${esc(c.button.label)}</a>` : ""}
+      ${c.secondary ? `<a class="card-secondary" href="${esc(c.secondary.url)}" target="_blank" rel="noopener">${esc(c.secondary.label)} ↗</a>` : ""}
+    </div></div>`,
+  followups: (c) => `
+    <div class="panel d3"><div class="panel-pad">
+      <span class="panel-tag"><span class="dot"></span>People in your spot also ask</span>
+      <div class="followups" id="followups">${c.followups.map((q) => `<button class="fu" data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>
+    </div></div>`,
+};
+
 function renderAnswer(raw, d) {
   const moments = d.moments || [];
-  const lead = moments[0];
-  const more = moments.slice(1);
+  const comps = d.components || [];
+  const col = (name) => comps.filter((c) => c.column === name && CATALOG[c.type]).map((c) => CATALOG[c.type](c)).join("");
 
   answer.innerHTML = `
     ${echo(raw)}
     <h2 class="answer-h">${esc(d.title)}</h2>
-    <p class="answer-sub">${lead ? `A straight answer — and the moment ${esc(WHO)} talks about it on video.` : "A straight answer for what you're dealing with."}</p>
-
+    <p class="answer-sub">${moments[0] ? `A straight answer — and the moment ${esc(WHO)} talks about it on video.` : "A straight answer for what you're dealing with."}</p>
     <div class="answer-grid">
-      <div class="col">
-        <div class="panel d1"><div class="panel-pad">
-          <span class="panel-tag"><span class="dot"></span>Straight answer</span>
-          <div class="synth-body" id="synth-body"></div>
-          <div class="audio-row" id="audio-row" ${canSpeak ? "" : "hidden"}>
-            <button class="audio-play" id="audio-play" aria-label="Play audio answer">${PLAY}</button>
-            <div class="audio-meta"><span class="t">Rather just listen?</span><span class="s">Tap to hear this read out loud</span></div>
-            <div class="audio-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          </div>
-        </div></div>
-
-        ${lead ? leadMoment(lead) : noMoment()}
-
-        ${more.length ? `
-        <div class="panel d3"><div class="panel-pad">
-          <span class="panel-tag"><span class="dot"></span>${esc(WHO)} talks about this too</span>
-          <div class="clip-list" id="clip-list">${more.map(momentRow).join("")}</div>
-        </div></div>` : ""}
-
-        <div class="panel d4"><div class="panel-pad">
-          <span class="panel-tag"><span class="dot"></span>What to do now</span>
-          <ol class="steps">${(d.steps || []).map((s) => `<li><span class="st">${rich(s)}</span></li>`).join("")}</ol>
-        </div></div>
-      </div>
-
-      <div class="col">
-        <div class="panel d2"><div class="panel-pad">
-          <span class="panel-tag live"><span class="dot"></span>What you've told us</span>
-          <div class="facts-list">${factRows(d.facts)}</div>
-          <button class="brief-cta" id="brief-cta">${esc(C.offer.brief_cta || C.offer.cta_label)}</button>
-          <p class="brief-note">${esc(C.offer.note || "")}</p>
-        </div></div>
-
-        ${(d.followups || []).length ? `
-        <div class="panel d3"><div class="panel-pad">
-          <span class="panel-tag"><span class="dot"></span>People in your spot also ask</span>
-          <div class="followups" id="followups">${d.followups.map((q) => `<button class="fu" data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>
-        </div></div>` : ""}
-      </div>
+      <div class="col">${col("main")}</div>
+      <div class="col">${col("side")}</div>
     </div>`;
 
   streamParas("#synth-body", d.paras || []);
@@ -242,7 +258,7 @@ function renderAnswer(raw, d) {
   clearTimeout(window.__sheetTimer);
   window.__sheetTimer = setTimeout(() => {
     if (document.body.classList.contains("answering") && !sheet.classList.contains("show") && vidScrim.hidden) openSheet();
-  }, (C.offer.popup_after_seconds || 14) * 1000);
+  }, ((d.ui && d.ui.popup_after_seconds) || C.offer.popup_after_seconds || 14) * 1000);
 }
 
 function leadMoment(m) {
@@ -338,7 +354,7 @@ function wireAnswerEvents(moments) {
     el.addEventListener("click", (e) => { if (e.target.closest("a")) return; open(el); });
     el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(el); } });
   });
-  $("#brief-cta").addEventListener("click", openSheet);
+  answer.querySelectorAll("[data-open-sheet]").forEach((b) => b.addEventListener("click", openSheet));
   const fu = $("#followups");
   if (fu) fu.addEventListener("click", (e) => { const b = e.target.closest(".fu"); if (b) { askInput.value = b.dataset.q; runAsk(b.dataset.q); } });
   const ap = $("#audio-play"); if (ap) ap.addEventListener("click", toggleAudio);

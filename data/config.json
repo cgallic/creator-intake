@@ -81,8 +81,51 @@
       "comments_placeholder": "What you're building, what you've tried, a link…",
       "submit_label": "Send this to Connor",
       "success": "Connor has this now, with what you already told us."
-    }
+    },
+    "popup_hot_seconds": 6
   },
+  "cards": [
+    {
+      "id": "kaicalls_demo",
+      "when": "Is the person who wrote `said` dealing with phone calls for a business: missing calls, answering the phone, a receptionist or front desk, after-hours calls, or calling leads back?",
+      "threshold": 0.5,
+      "kicker": "Hear it for yourself",
+      "title": "Call Kai, the AI secretary",
+      "body": "Call <strong>417-835-0402</strong> and Kai answers the way it would for your business. KaiCalls is Connor's company.",
+      "button": {
+        "label": "Call 417-835-0402",
+        "url": "tel:+14178350402"
+      },
+      "secondary": {
+        "label": "Start at kaicalls.com/start",
+        "url": "https://www.kaicalls.com/start"
+      }
+    },
+    {
+      "id": "pricing",
+      "when": "Does the person who wrote `said` ask what something costs, about prices or plans, or what it takes to get started?",
+      "threshold": 0.5,
+      "kicker": "KaiCalls plans",
+      "title": "From $10 a month",
+      "body": "Backup $10/mo · Kai Line $79/mo · Office $349/mo. Every plan includes a phone number, with a 30-day refund.",
+      "button": {
+        "label": "See the plans",
+        "url": "https://www.kaicalls.com/pricing"
+      }
+    },
+    {
+      "id": "talk_to_connor",
+      "when": "Does the person who wrote `said` ask to talk to Connor, hire him, work with him, or get his help directly?",
+      "threshold": 0.5,
+      "kicker": "Talk to Connor",
+      "title": "30 minutes with Connor",
+      "body": "Free. Bring this answer and what you're working on.",
+      "button": {
+        "label": "Book 30 min with Connor",
+        "url": "https://www.kaicalls.com/l/XJmd7BiX"
+      }
+    }
+  ],
   "intake": {
     "fields": [
       {

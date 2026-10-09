@@ -528,3 +528,10 @@ body.booting .shell { visibility: hidden; }
 .powered { margin-top: 10px; font-size: 14px; }
 .powered a { color: var(--accent); font-weight: 600; text-decoration: none; }
 .powered a:hover { text-decoration: underline; }
+
+/* config.cards: fixed cards Jev chose to show */
+.card-title { font-family: var(--serif); font-weight: 600; font-size: 21px; line-height: 1.2; margin: 10px 0 6px; }
+.card-body { margin: 0 0 4px; color: var(--ink-soft); font-size: 15.5px; }
+.card-btn { text-decoration: none; }
+.card-secondary { display: inline-block; margin-top: 10px; font-size: 14px; color: var(--accent); text-decoration: none; font-weight: 600; }
+.card-secondary:hover { text-decoration: underline; }

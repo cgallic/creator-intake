@@ -68,6 +68,16 @@ every field. The important ones are:
   and follow-ups. Each moment is a source id plus a passage. **`api/_verify.js`**
   keeps it only if the passage appears word for word inside one unbroken run of the
   creator's lines, and takes the start second from there. Anything else is dropped.
+- **`api/_jev.js`** decides **which components come back**. Jev, TypeSafe's System
+  One decision model (served by OpenRouter at `/api/v1/systemone` with the same key),
+  answers one yes/no question per optional component about what the visitor said:
+  steps, facts, follow-ups, "wants to talk now", and each of the creator's
+  `config.cards` (a demo card, a pricing card and so on). It returns calibrated
+  probabilities in about half a second and runs alongside the LLM, so it adds no
+  wait. Code applies the thresholds. The LLM only writes the words inside the
+  components Jev picked. The response is a component list (A2UI-style) that the page
+  renders from a fixed catalog. If Jev is down, the built-in defaults apply and no
+  cards show. Costs about $0.00002 per question.
 - **`api/lead.js`** POSTs the brief as JSON to `LEAD_WEBHOOK_URL` (Zapier, Make, n8n
   or a CRM). Without that URL it reports `sent: false`, and the page says plainly
   that nothing was sent.
@@ -99,6 +109,8 @@ The page notices it is under `/ask` and resolves its assets and API calls there.
 | `OPENROUTER_API_KEY` | the cheap path, used when set. Default model `anthropic/claude-haiku-5.5` |
 | `ANTHROPIC_API_KEY` | used when no OpenRouter key: `claude-opus-5-5` direct |
 | `ANSWER_MODEL` | overrides the model on either backend (e.g. `typesafe/jev-router`) |
+| `JEV_MODEL` | Jev version for component decisions (default `typesafe/jev-1.13`, pinned so thresholds stay tuned) |
+| `JEV_OFF` | `1` disables Jev: built-in defaults, no cards |
 | `ANSWER_DAILY_CAP_USD` | stop answering once the OpenRouter key has spent this much today (default 5) |
 | `ANSWER_MONTHLY_CAP_USD` | same, for the month (default 30) |
 | `ANSWER_IGNORE_PROVIDERS` | OpenRouter provider slugs to never use, comma-separated |

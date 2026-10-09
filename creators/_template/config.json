@@ -6,7 +6,8 @@
     "known_facts": "True things the guide may state even if no video says them: prices, offer details, contact.",
     "exclude_video_ids": "Optional: YouTube ids to leave out (ads, other people talking, AI voiceovers).",
     "featured_ids": "Optional: YouTube ids for the homepage grid. Default is the newest six.",
-    "theme": "Any CSS colors. Optional: serif, sans, fonts_href (a Google Fonts URL)."
+    "theme": "Any CSS colors. Optional: serif, sans, fonts_href (a Google Fonts URL).",
+    "cards": "Optional fixed cards. Jev (TypeSafe's decision model, via OpenRouter) answers each card's `when` yes/no question about what the visitor said; cards at or above `threshold` show, highest probability first. Write `when` about `said` (the visitor's words). Body may use <strong>/<b>/<em>."
   },
   "slug": "_template",
   "name": "Full Name",
@@ -74,8 +75,27 @@
       "comments_placeholder": "Anything that matters…",
       "submit_label": "Send this to First",
       "success": "First has this now."
-    }
+    },
+    "popup_hot_seconds": 6
   },
+  "cards": [
+    {
+      "id": "demo",
+      "when": "Is the person who wrote `said` asking about <the thing your demo shows>?",
+      "threshold": 0.5,
+      "kicker": "See it",
+      "title": "Try the demo",
+      "body": "What they get, in one line.",
+      "button": {
+        "label": "Try it",
+        "url": "https://example.com/demo"
+      },
+      "secondary": {
+        "label": "Pricing",
+        "url": "https://example.com/pricing"
+      }
+    }
+  ],
   "intake": {
     "fields": [
       {
