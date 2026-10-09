@@ -131,7 +131,8 @@
       .demo-steps > li.on { opacity: 1; }
       .demo-steps .n { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; background: rgba(255,255,255,0.12); }
       .demo-steps li.on .n { background: var(--caption); color: var(--ink); }
-      .demo-steps b { display: block; font-weight: 800; font-stretch: 108%; font-size: 17px; }
+      .demo-steps > li > div > b { display: block; font-weight: 800; font-stretch: 108%; font-size: 17px; }
+      .demo-why b, .demo-claim b { display: inline; font-weight: 800; }
       .demo-steps .d { color: rgba(255,255,255,0.75); font-size: 15.5px; }
       .demo-clip { display: grid; grid-template-columns: minmax(0, 220px) 1fr; gap: 16px; margin-top: 10px; align-items: start; }
       @media (max-width: 640px) { .demo-clip { grid-template-columns: 1fr; } }
@@ -622,6 +623,7 @@
               <span class="meter"><i></i></span><span class="pct">0%</span>
             </div>`).join("")}</div><div id="deal-after"></div>`;
           await wait(order.length * 90 + 450);
+          document.querySelectorAll("#deck .ocard").forEach((el) => el.classList.remove("deal")); // settled, even if animations were paused
           // the odds fill in, all at once, like a poll closing
           document.querySelectorAll("#deck .ocard").forEach((el) => {
             const o = order.find((x) => x.id === el.dataset.id);
