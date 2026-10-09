@@ -115,6 +115,36 @@
       .how h3 { margin: 0 0 8px; font-size: 23px; font-weight: 800; font-stretch: 110%; line-height: 1.1; }
       .how p { margin: 0; color: var(--ink-soft); font-size: 17px; }
 
+      /* live demo: ask, find the second, check the words, play */
+      .demo { background: var(--ink); color: #fff; border-radius: 26px; padding: clamp(20px, 3vw, 32px); }
+      .who-pick { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+      .who-pick button { font: inherit; font-weight: 700; font-size: 15px; border-radius: 999px; padding: 8px 14px; border: 2px solid rgba(255,255,255,0.25); background: transparent; color: #fff; cursor: pointer; }
+      .who-pick button[aria-pressed="true"] { background: #fff; color: var(--ink); border-color: #fff; }
+      .demo form { display: flex; gap: 10px; background: #fff; border-radius: 999px; padding: 7px; }
+      .demo input { flex: 1; min-width: 0; border: none; outline: none; font: inherit; font-size: 17px; padding: 8px 14px; color: var(--ink); background: transparent; }
+      .demo form button { font: inherit; font-weight: 800; font-stretch: 112%; border: none; border-radius: 999px; padding: 12px 20px; background: var(--caption); color: var(--ink); cursor: pointer; white-space: nowrap; }
+      .demo form button:disabled { opacity: 0.6; }
+      .demo-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+      .demo-chips button { font: inherit; font-size: 14px; font-weight: 600; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.06); color: #fff; border-radius: 999px; padding: 6px 12px; cursor: pointer; text-align: left; }
+      .demo-steps { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 14px; }
+      .demo-steps > li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; opacity: 0.35; transition: opacity 0.25s ease; }
+      .demo-steps > li.on { opacity: 1; }
+      .demo-steps .n { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; background: rgba(255,255,255,0.12); }
+      .demo-steps li.on .n { background: var(--caption); color: var(--ink); }
+      .demo-steps b { display: block; font-weight: 800; font-stretch: 108%; font-size: 17px; }
+      .demo-steps .d { color: rgba(255,255,255,0.75); font-size: 15.5px; }
+      .demo-clip { display: grid; grid-template-columns: minmax(0, 220px) 1fr; gap: 16px; margin-top: 10px; align-items: start; }
+      @media (max-width: 640px) { .demo-clip { grid-template-columns: 1fr; } }
+      .demo-video { position: relative; aspect-ratio: 9 / 16; max-height: 390px; border-radius: 16px; overflow: hidden; background: #000; cursor: pointer; }
+      .demo-video.wide { aspect-ratio: 16 / 9; }
+      .demo-video img, .demo-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border: 0; }
+      .demo-video .play { position: absolute; inset: auto 10px 10px 10px; background: var(--caption); color: var(--ink); font-weight: 800; border-radius: 999px; padding: 9px 12px; text-align: center; font-size: 14px; }
+      .demo-quote { background: #fff; color: var(--ink); border-radius: 14px; padding: 14px 16px; font-size: 16px; line-height: 1.45; }
+      .demo-quote mark { background: var(--caption); color: var(--ink); padding: 1px 3px; border-radius: 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+      .demo-quote small { display: block; margin-top: 8px; font-weight: 800; color: #0f7a3a; font-size: 13.5px; }
+      .demo-full { display: inline-block; margin-top: 6px; font-weight: 800; color: var(--caption); }
+      .demo-empty { color: rgba(255,255,255,0.8); font-size: 15.5px; }
+
       .price-note { font-weight: 600; color: rgba(255,255,255,0.85); font-size: 16px; }
       .gallery { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
       @media (max-width: 980px) { .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -260,6 +290,24 @@
     </header>
 
     <main class="wrap">
+      <section class="block" id="try">
+        <h2>Try it.</h2>
+        <p class="lede">Pick a creator and ask them something. You'll see each step: it finds the moment, checks the words against their captions, and plays it from that second.</p>
+        <div class="demo">
+          <div class="who-pick" id="who-pick" role="group" aria-label="Pick a creator"></div>
+          <form id="demo-form" autocomplete="off">
+            <input id="demo-q" type="text" aria-label="Your question" placeholder="Ask them something…" />
+            <button id="demo-go" type="submit">Find the moment</button>
+          </form>
+          <div class="demo-chips" id="demo-chips"></div>
+          <ol class="demo-steps" id="demo-steps">
+            <li data-step="1"><span class="n">1</span><div><b>It searches every clip</b><span class="d" id="s1">Every caption line of their videos, each stamped with the second it was said.</span></div></li>
+            <li data-step="2"><span class="n">2</span><div><b>It checks the words</b><span class="d" id="s2">The quote has to appear in their captions exactly, word for word, said by them and not a guest.</span></div></li>
+            <li data-step="3"><span class="n">3</span><div><b>It plays the moment</b><span class="d" id="s3">From the second they said it, not the start of the video.</span><div id="demo-out"></div></div></li>
+          </ol>
+        </div>
+      </section>
+
       <section class="block" id="gallery-sec" hidden>
         <h2>Try it on creators you know.</h2>
         <p class="lede">Unofficial previews, built from public videos in about ten minutes each. Ask them something they've talked about on camera.</p>
@@ -464,6 +512,61 @@
           </article>`;
         }).join("");
         if (!V.length) $("#people").innerHTML = `<p class="lede"><a href="./">Ask the page something</a> to see it work.</p>`;
+
+        /* ---------- live demo: the real clip search, on the real pages ---------- */
+        const demoPeople = [{ slug: "", label: C.short_name }];
+        try { for (const sl of ((await (await fetch("./data/gallery.json")).json()).pages || [])) demoPeople.push({ slug: sl, label: null }); } catch (_) {}
+        const base = (sl) => (sl ? `./c/${sl}/` : "./");
+        const demoCfg = {};
+        await Promise.all(demoPeople.map(async (p) => { try { demoCfg[p.slug] = await (await fetch(`${base(p.slug)}data/config${p.slug ? "" : ".json"}`)).json(); p.label = p.label || demoCfg[p.slug].short_name; } catch (_) {} }));
+        let pick = demoPeople[0];
+        const setStep = (n) => document.querySelectorAll("#demo-steps > li").forEach((li) => li.classList.toggle("on", +li.dataset.step <= n));
+        function choose(p) {
+          pick = p;
+          document.querySelectorAll("#who-pick button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.slug === p.slug)));
+          const cfg = demoCfg[p.slug] || {};
+          $("#demo-q").placeholder = cfg.hero?.placeholder || `Ask ${p.label} something…`;
+          $("#demo-chips").innerHTML = (cfg.chips || []).slice(0, 4).map((c) => `<button type="button" data-q="${esc(c.query)}">${esc(c.label)}</button>`).join("");
+          $("#demo-out").innerHTML = ""; setStep(0);
+        }
+        $("#who-pick").innerHTML = demoPeople.filter((p) => p.label).map((p) => `<button type="button" data-slug="${esc(p.slug)}" aria-pressed="false">${esc("Ask " + p.label)}</button>`).join("");
+        $("#who-pick").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) choose(demoPeople.find((p) => p.slug === b.dataset.slug)); });
+        $("#demo-chips").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { $("#demo-q").value = b.dataset.q; ask(b.dataset.q); } });
+        $("#demo-form").addEventListener("submit", (e) => { e.preventDefault(); const q = $("#demo-q").value.trim(); if (q) ask(q); });
+        if (demoPeople[0]) choose(demoPeople[0]);
+
+        async function ask(q) {
+          const p = pick, cfg = demoCfg[p.slug] || {};
+          $("#demo-go").disabled = true; $("#demo-out").innerHTML = ""; setStep(1);
+          $("#s1").textContent = `Searching ${p.label}'s clips…`;
+          const t0 = performance.now();
+          let d = { moments: [] };
+          try { d = await (await fetch(`${base(p.slug)}api/quick`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ q }) })).json(); } catch (_) {}
+          const secs = ((performance.now() - t0) / 1000).toFixed(1);
+          $("#demo-go").disabled = false;
+          const m = (d.moments || [])[0];
+          if (!m) {
+            $("#s1").textContent = `Searched ${p.label}'s clips in ${secs}s.`;
+            setStep(1);
+            $("#demo-out").innerHTML = `<p class="demo-empty">No clip clearly answers that, so it shows nothing rather than guess. <a class="demo-full" href="${esc(base(p.slug))}?q=${encodeURIComponent(q)}">Ask the full page anyway</a></p>`;
+            return;
+          }
+          $("#s1").textContent = `Searched ${p.label}'s clips and found it in ${secs}s.`;
+          setStep(2);
+          $("#s2").textContent = `Found word for word in their captions for “${m.title}”.`;
+          await new Promise((r) => setTimeout(r, 450));
+          setStep(3);
+          $("#s3").textContent = `It starts at ${mmss(m.t)}, where ${p.label} says it.`;
+          const vertical = m.vertical !== false;
+          $("#demo-out").innerHTML = `<div class="demo-clip">
+              <div class="demo-video ${vertical ? "" : "wide"}" id="demo-video" role="button" tabindex="0" aria-label="Play from ${mmss(m.t)}"><img src="${esc(m.thumb)}" alt="" /><span class="play">▶ Play from ${mmss(m.t)}</span></div>
+              <div><div class="demo-quote">“<mark>${esc(m.quote)}</mark>”<small>✓ In their captions, word for word, at ${mmss(m.t)}</small></div>
+              <a class="demo-full" href="${esc(base(p.slug))}?q=${encodeURIComponent(q)}">See the full answer and next step</a></div>
+            </div>`;
+          const play = () => { $("#demo-video").innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(m.youtube_id)}?start=${Math.max(0, m.t)}&autoplay=1&rel=0&playsinline=1" title="${esc(m.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`; };
+          $("#demo-video").addEventListener("click", play, { once: true });
+          $("#demo-video").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); play(); } }, { once: true });
+        }
 
         /* ---------- gallery: preview pages built from creators people know ---------- */
         try {
