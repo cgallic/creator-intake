@@ -19,6 +19,7 @@
  */
 const crypto = require("node:crypto");
 const store = require("./_store");
+const mail = require("./_mail");
 const { SLUG } = require("./_creator");
 const { verifyCode, cleanUrl } = require("./new");
 
@@ -142,7 +143,17 @@ module.exports = async (req, res) => {
       if (!s) return res.status(404).json({ error: "not found" });
       if (s.metadata?.kind !== "lifetime" || s.payment_status !== "paid") return res.status(402).json({ error: "We couldn't confirm the payment yet. If you paid, refresh in a minute." });
       const slug = SLUG.test(s.metadata.slug || "") ? s.metadata.slug : null;
-      await store.putJSON(`lifetime/${sid}.json`, { session: sid, slug, amount: s.amount_total, at: new Date().toISOString() });
+      const prior = await store.getJSON(`lifetime/${sid}.json`);
+      if (prior) return res.status(200).json({ ok: true, slug });
+      const to = s.customer_details?.email;
+      let emailed = false;
+      if (to) {
+        try {
+          await mail.send({ to, ...mail.lifetimeWelcome({ name: s.customer_details?.name, slug, origin: origin(req) }), idempotencyKey: `lifetime-${sid}` });
+          emailed = true;
+        } catch (e) { console.error("lifetime email:", e.message); }
+      }
+      await store.putJSON(`lifetime/${sid}.json`, { session: sid, slug, amount: s.amount_total, emailed, at: new Date().toISOString() });
       if (slug) {
         const priv = (await store.getJSON(`creators/${slug}/private.json`)) || {};
         await store.putJSON(`creators/${slug}/private.json`, { ...priv, lifetime: { session: sid, at: new Date().toISOString() } });
