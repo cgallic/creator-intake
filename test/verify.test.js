@@ -78,3 +78,12 @@ test("the creator's answer after an interviewer line verifies at its own second"
   assert.ok(v.ok, v.reason);
   assert.strictEqual(v.t, 5);
 });
+
+test("self-serve: channel links parse to a stable slug, anything else is refused", () => {
+  const { parseChannel, slugOf } = require("../api/new.js");
+  assert.strictEqual(parseChannel("@AliAbdaal").url, "https://www.youtube.com/@AliAbdaal");
+  assert.strictEqual(slugOf(parseChannel("https://www.youtube.com/@Connor.Gallic/shorts").key), "connor-gallic");
+  assert.strictEqual(parseChannel("https://youtube.com/channel/UCoOae5nYA7VqaXzerajD0lg").key, "ucooae5nya7vqaxzerajd0lg");
+  assert.strictEqual(parseChannel("https://evil.example/@x"), null);
+  assert.strictEqual(parseChannel("not a channel"), null);
+});

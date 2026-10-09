@@ -8,8 +8,7 @@ process.env.ANSWER_DAILY_CAP_USD = "5";
 process.env.ANSWER_MONTHLY_CAP_USD = "30";
 
 function run(usage, { failSpend = false } = {}) {
-  delete require.cache[require.resolve("../api/answer.js")];
-  delete require.cache[require.resolve("../api/_guard.js")];
+  for (const k of Object.keys(require.cache)) if (/[\\/]api[\\/]/.test(k)) delete require.cache[k];
   const calls = [];
   global.fetch = async (url) => {
     calls.push(String(url));

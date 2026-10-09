@@ -19,6 +19,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { creatorDir, loadConfig } from "./config.mjs";
+import { captionLines } from "./lib.mjs";
 
 const slug = process.argv[2];
 const config = loadConfig(slug);
@@ -26,32 +27,6 @@ const dir = creatorDir(slug);
 const capDir = path.join(dir, "captions");
 const BUDGET = config.corpus_token_budget || 150000;
 const tokens = (s) => Math.ceil(s.split(/\s+/).length * 1.35);
-
-function captionLines(json3, soloOnly) {
-  const events = (json3.events || []).filter((e) => e.segs && e.segs.some((s) => (s.utf8 || "").trim()));
-  const segments = [];
-  let seg = null;
-  for (const e of events) {
-    const t = Math.floor((e.tStartMs || 0) / 1000);
-    const parts = e.segs.map((s) => s.utf8 || "").join("").replace(/\s+/g, " ").split(">>");
-    parts.forEach((part, i) => {
-      if (i > 0 || !seg) { seg = { pieces: [] }; segments.push(seg); }
-      const text = part.trim();
-      if (text) seg.pieces.push({ t, text });
-    });
-  }
-  const lines = [];
-  for (const sg of segments.filter((x) => x.pieces.length)) {
-    const whole = sg.pieces.map((p) => p.text).join(" ").trim();
-    const who = !soloOnly && segments.length > 1 && /\?["”']?$/.test(whole) ? "other" : "creator";
-    let cur = null;
-    for (const p of sg.pieces) {
-      if (!cur || p.t - cur.t >= 8 || (/[.?!]$/.test(cur.text) && p.t - cur.t >= 4)) { cur = { t: p.t, who, text: p.text }; lines.push(cur); }
-      else cur.text += " " + p.text;
-    }
-  }
-  return lines.map((l) => ({ ...l, text: l.text.replace(/\s+/g, " ").trim() })).filter((l) => l.text);
-}
 
 function readTsv(file, cols) {
   if (!fs.existsSync(file)) return new Map();
@@ -133,6 +108,13 @@ const corpus = {
   sources: "YouTube captions of the creator's own public uploads (yt-dlp), newest first within the token budget",
   clips,
 };
+// Keep topic tags from a previous build/tag-lanes.mjs run (new clips get tagged on the next run).
+const prev = fs.existsSync(path.join(dir, "corpus.json")) ? JSON.parse(fs.readFileSync(path.join(dir, "corpus.json"), "utf8")) : null;
+if (prev) {
+  const tags = new Map(prev.clips.filter((c) => c.lane).map((c) => [c.youtube_id, c]));
+  for (const c of clips) { const t = tags.get(c.youtube_id); if (t) { c.lane = t.lane; c.lane_p = t.lane_p; } }
+  if (prev.lanes_tagged) corpus.lanes_tagged = prev.lanes_tagged;
+}
 fs.writeFileSync(path.join(dir, "corpus.json"), JSON.stringify(corpus));
 fs.writeFileSync(path.join(dir, "pattern-excluded.json"), JSON.stringify(patternHits, null, 1));
 fs.writeFileSync(path.join(dir, "unscreened.json"), JSON.stringify(unscreened.map((id) => ({ youtube_id: id, title: (meta.get(id) || listing.get(id) || {}).title }))));

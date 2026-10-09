@@ -5,12 +5,14 @@
  * (Zapier, Make, n8n, a CRM, KaiCalls...) receives the JSON below. Without it the
  * endpoint answers { sent: false } and the page says plainly that nothing was sent.
  */
-const config = require("../data/config.json");
+const { configFor } = require("./_creator");
 
 const clip = (s, n) => String(s ?? "").trim().slice(0, n);
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "POST" });
+  let config;
+  try { config = await configFor(req.query && req.query.c); } catch (_) { return res.status(404).json({ error: "No page here yet." }); }
   const b = req.body || {};
   const lead = {
     creator: config.slug,

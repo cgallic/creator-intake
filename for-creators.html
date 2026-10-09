@@ -230,7 +230,7 @@
             <h1>Answer every question with a video you already made.</h1>
             <p id="hero-p">Someone types what's going on, in their own words. Your page finds the moment you already answered it, plays it from that second, and hands them your offer.</p>
             <div class="actions">
-              <a class="btn" id="book" href="#" target="_blank" rel="noopener">Get one for your channel</a>
+              <a class="btn" id="book" href="./new">Build yours free</a>
               <a class="link" id="try2" href="./"></a>
             </div>
           </div>
@@ -321,10 +321,10 @@
     <section class="ask">
       <div class="wrap row">
         <div>
-          <h2>Send me your channel.</h2>
-          <p id="ask-p">I'll build yours from your videos and send you the link. You'll see every answer it gives before anyone else does.</p>
+          <h2>Paste your channel.</h2>
+          <p id="ask-p">A free preview takes a few minutes. Want it wired to your offer, your calendar and your domain? Book a call and I'll set it up with you.</p>
         </div>
-        <div><a class="btn" id="book2" href="#" target="_blank" rel="noopener">Book 30 minutes</a></div>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center"><a class="btn" href="./new">Build yours free</a><a class="link" id="book2" href="#" target="_blank" rel="noopener" style="color:#fff">Book 30 minutes</a></div>
       </div>
     </section>
     <footer><div class="wrap" id="footer"></div></footer>
@@ -342,7 +342,7 @@
         $("#home").textContent = C.brand || `Ask ${who}`;
         $("#try").textContent = `Try ${who}'s`;
         $("#try2").textContent = `Ask ${who}'s page something first`;
-        for (const id of ["#book", "#book2"]) $(id).href = book;
+        $("#book2").href = book;
         $("#book2").textContent = `Book 30 minutes with ${who}`;
         $("#footer").textContent = C.footer || "";
 

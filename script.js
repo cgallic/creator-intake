@@ -91,7 +91,16 @@ function applyConfig() {
   $("#featured-p").textContent = C.featured_blurb || `Real videos from ${C.name}. Ask a question above and we'll take you to the moment ${WHO} talks about your situation.`;
   $("#disclaimer").textContent = C.disclaimer || `Answers on this page are written by an AI from ${C.name}'s published videos; quotes are shown exactly as captioned and play from the second they are said. Not professional advice.`;
   $("#footer-line").textContent = C.footer || `© ${new Date().getFullYear()} ${C.name}`;
-  if (C.powered_by) { $("#powered").innerHTML = `<a href="${esc(C.powered_by.url)}" ${/^https?:/.test(C.powered_by.url) ? 'target="_blank" rel="noopener"' : ""}>${esc(C.powered_by.label)}</a>`; $("#powered").hidden = false; }
+  // Under /c/<slug> (a self-serve page) links to the app's own pages resolve from the app root.
+  const appRoot = location.pathname.replace(/\/c\/[a-z0-9-]+\/?.*$/, "/").replace(/[^/]*$/, "");
+  const appLink = (u) => (u && u.startsWith("/") ? appRoot + u.slice(1) : u);
+  if (C.powered_by) { const u = appLink(C.powered_by.url); $("#powered").innerHTML = `<a href="${esc(u)}" ${/^https?:/.test(u) ? 'target="_blank" rel="noopener"' : ""}>${esc(C.powered_by.label)}</a>`; $("#powered").hidden = false; }
+  if (C.preview && C.preview.unofficial) {
+    const b = document.createElement("div");
+    b.className = "preview-banner";
+    b.innerHTML = `Unofficial preview built from ${esc(C.name)}'s public videos. Not affiliated with ${esc(C.name)}. <a href="${esc(appLink("/for-creators"))}">Is this your channel? Claim it</a>`;
+    document.body.prepend(b);
+  }
   document.body.classList.remove("booting");
 }
 

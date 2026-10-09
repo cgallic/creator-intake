@@ -13,7 +13,9 @@
 // (Underscore file: Vercel does not route it.)
 
 const JEV_MODEL = process.env.JEV_MODEL || "typesafe/jev-1.13";
-const ENDPOINT = "https://openrouter.ai/api/v1/systemone";
+// OPENROUTER_BASE lets the build worker go through the app's AI proxy (api/ai.js)
+// instead of holding the OpenRouter key itself.
+const ENDPOINT = `${process.env.OPENROUTER_BASE || "https://openrouter.ai/api/v1"}/systemone`;
 const BAR = { lane: 0.6, intent: 0.6 }; // below this, we don't act on it and may ask
 const MARGIN = 0.2; // ...and the top answer must beat the runner-up by this much (confidence ignores the runner-up)
 

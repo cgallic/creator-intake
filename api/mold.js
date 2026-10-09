@@ -6,12 +6,14 @@
  * follow-up. Returns the new primary next step, which cards show, and what Jev now
  * reads. `told` (their own one-tap answers) beats anything Jev infers.
  */
-const config = require("../data/config.json");
+const { configFor } = require("./_creator");
 const guard = require("./_guard");
 const jev = require("./_jev");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "POST" });
+  let config;
+  try { config = await configFor(req.query && req.query.c); } catch (_) { return res.status(404).json({ error: "No page here yet." }); }
   if (!process.env.OPENROUTER_API_KEY || process.env.JEV_OFF === "1" || !config.jev) return res.status(200).json({ skipped: true });
   const b = req.body || {};
   const q = String(b.q || "").trim().slice(0, 1200);

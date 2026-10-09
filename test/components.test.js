@@ -79,8 +79,7 @@ test("Jev unavailable: default next step, nothing asked, nothing guessed", () =>
 
 test("the answer endpoint: Jev read + judged videos come back as components", async () => {
   process.env.OPENROUTER_API_KEY = "test-key";
-  delete require.cache[require.resolve("../api/answer.js")];
-  delete require.cache[require.resolve("../api/_guard.js")];
+  for (const k of Object.keys(require.cache)) if (/[\\/]api[\\/]/.test(k)) delete require.cache[k];
   const corpus = require("../data/corpus.json");
   const quoted = corpus.clips[0];
   const passage = quoted.lines.filter((l) => l.who !== "other").map((l) => l.text).join(" ").split(/\s+/).slice(0, 12).join(" ");
