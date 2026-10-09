@@ -10,17 +10,22 @@
  *   POST /api/claim?a=complete { id, session_id }     -> { url }  checks payment, then
  *        swaps the preview for the owner's page: their next-step link, no "unofficial"
  *        banner, and their lead webhook (kept out of the public config).
+ *   POST /api/claim?a=lifetime { c }                  -> { url } Stripe Checkout for Lifetime Pro
+ *   POST /api/claim?a=lifetime_done { session_id }    -> { ok, slug } checks payment, records it
  *
- * Price: CLAIM_PRICE_CENTS (default 4900), one time. Without STRIPE_SECRET_KEY,
- * claiming is free (launch mode).
+ * Claiming is free unless CLAIM_PRICE_CENTS is set above 0 (and STRIPE_SECRET_KEY is set).
+ * Lifetime Pro: LIFETIME_PRICE_CENTS (default 9900) once, first LIFETIME_CAP (default 100)
+ * buyers, on sale whenever STRIPE_SECRET_KEY is set. Stripe is the count of record.
  */
 const crypto = require("node:crypto");
 const store = require("./_store");
 const { SLUG } = require("./_creator");
 const { verifyCode, cleanUrl } = require("./new");
 
-const PRICE = +(process.env.CLAIM_PRICE_CENTS || 4900);
-const paid = () => !!process.env.STRIPE_SECRET_KEY;
+const PRICE = +(process.env.CLAIM_PRICE_CENTS || 0);
+const paid = () => PRICE > 0 && !!process.env.STRIPE_SECRET_KEY;
+const LIFETIME = +(process.env.LIFETIME_PRICE_CENTS || 9900);
+const CAP = +(process.env.LIFETIME_CAP || 100);
 const origin = (req) => process.env.PUBLIC_URL || `https://${req.headers["x-forwarded-host"] || req.headers.host}`;
 
 async function stripe(path, form) {
@@ -32,6 +37,27 @@ async function stripe(path, form) {
   const d = await r.json();
   if (!r.ok) throw new Error(d.error?.message || `stripe ${r.status}`);
   return d;
+}
+
+/** Lifetime deals sold so far, from Stripe itself (cached a minute per instance). */
+let soldCache = { n: 0, at: 0 };
+async function lifetimeSold() {
+  if (Date.now() - soldCache.at < 60000) return soldCache.n;
+  let n = 0, page;
+  do {
+    const d = await stripe(`payment_intents/search?${new URLSearchParams({ query: "metadata['kind']:'lifetime' AND status:'succeeded'", limit: "100", ...(page ? { page } : {}) })}`);
+    n += d.data.length;
+    page = d.has_more ? d.next_page : null;
+  } while (page && n < CAP);
+  soldCache = { n, at: Date.now() };
+  return n;
+}
+
+async function lifetimeInfo() {
+  if (!process.env.STRIPE_SECRET_KEY) return { on: false };
+  const sold = await lifetimeSold().catch((e) => { console.error("lifetime count:", e.message); return null; });
+  if (sold === null) return { on: false };
+  return { on: sold < CAP, price: LIFETIME, cap: CAP, left: Math.max(0, CAP - sold) };
 }
 
 /** The owner's page: their offer as the next step, no preview banner. */
@@ -57,7 +83,7 @@ module.exports = async (req, res) => {
   const q = req.query || {}, b = req.body || {};
   try {
     if (req.method === "GET") {
-      if (q.a === "price") return res.status(200).json({ price: PRICE, paid: paid() });
+      if (q.a === "price") return res.status(200).json({ price: PRICE, paid: paid(), lifetime: await lifetimeInfo() });
       const c = String(q.c || "");
       if (!SLUG.test(c)) return res.status(404).json({ error: "not found" });
       const cfg = await store.getJSON(`creators/${c}/config.json`);
@@ -85,6 +111,43 @@ module.exports = async (req, res) => {
         webhook: hook, status: "queued", stage: "queued", detail: "Waiting to check your channel", created_at: now, updated_at: now,
       });
       return res.status(200).json({ id });
+    }
+
+    if (q.a === "lifetime") {
+      const c = String(b.c || "");
+      if (c && !SLUG.test(c)) return res.status(404).json({ error: "not found" });
+      const lt = await lifetimeInfo();
+      if (!lt.on) return res.status(409).json({ error: "The lifetime deal is sold out." });
+      const back = `${origin(req)}/claim?${c ? `c=${c}&` : ""}`;
+      const meta = { kind: "lifetime", slug: c || "" };
+      const s = await stripe("checkout/sessions", {
+        mode: "payment",
+        "line_items[0][quantity]": "1",
+        "line_items[0][price_data][currency]": "usd",
+        "line_items[0][price_data][unit_amount]": String(LIFETIME),
+        "line_items[0][price_data][product_data][name]": "Lifetime Pro",
+        "line_items[0][price_data][product_data][description]": `One payment, no monthly fee. First ${CAP} creators only.`,
+        "metadata[kind]": meta.kind, "metadata[slug]": meta.slug,
+        "payment_intent_data[metadata][kind]": meta.kind, "payment_intent_data[metadata][slug]": meta.slug,
+        success_url: `${back}lifetime={CHECKOUT_SESSION_ID}`,
+        cancel_url: c ? `${origin(req)}/claim?c=${c}` : `${origin(req)}/for-creators`,
+      });
+      return res.status(200).json({ url: s.url });
+    }
+
+    if (q.a === "lifetime_done") {
+      const sid = String(b.session_id || "");
+      if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(sid) || !process.env.STRIPE_SECRET_KEY) return res.status(404).json({ error: "not found" });
+      const s = await stripe(`checkout/sessions/${sid}`);
+      if (s.metadata?.kind !== "lifetime" || s.payment_status !== "paid") return res.status(402).json({ error: "We couldn't confirm the payment yet. If you paid, refresh in a minute." });
+      const slug = SLUG.test(s.metadata.slug || "") ? s.metadata.slug : null;
+      await store.putJSON(`lifetime/${sid}.json`, { session: sid, slug, amount: s.amount_total, at: new Date().toISOString() });
+      if (slug) {
+        const priv = (await store.getJSON(`creators/${slug}/private.json`)) || {};
+        await store.putJSON(`creators/${slug}/private.json`, { ...priv, lifetime: { session: sid, at: new Date().toISOString() } });
+      }
+      soldCache.at = 0;
+      return res.status(200).json({ ok: true, slug });
     }
 
     const id = String(b.id || "");

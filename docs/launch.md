@@ -57,7 +57,7 @@ That's where it can go wrong.
 - **Tagline (60 chars):** Your videos answer your DMs and book the call
 - **Description:** Paste your YouTube channel. Your page answers every question with the
   exact clip where you already said it, verified word for word, then sends people to
-  your link. It never talks as you. Free to try and free to claim during launch. Open source.
+  your link. It never talks as you. Free to try and free to claim. Lifetime Pro is $99 once for the first 100 creators. Open source.
 - **Gallery:**
   1. A question typed, and the clip playing from the second, with the quote.
   2. "Why this page?", showing what it decided and how sure it was.

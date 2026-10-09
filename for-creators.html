@@ -169,6 +169,12 @@
       .demo-claim { display: block; margin-top: 8px; font-size: 14.5px; color: var(--caption); }
       .demo-empty { color: rgba(255,255,255,0.8); font-size: 15.5px; }
 
+      .lifetime { display: none; margin-top: 18px; background: var(--caption); color: var(--ink); border-radius: 22px; padding: 22px; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+      .lifetime.on { display: flex; }
+      .lifetime b { font-weight: 900; font-stretch: 118%; font-size: 28px; line-height: 1; }
+      .lifetime p { margin: 6px 0 0; font-size: 16px; max-width: 40em; }
+      .lifetime button { font: inherit; font-weight: 800; font-stretch: 112%; font-size: 17px; border: none; border-radius: 999px; padding: 14px 24px; cursor: pointer; background: var(--ink); color: #fff; }
+      .lifetime button:disabled { opacity: 0.55; }
       .price-note { font-weight: 600; color: rgba(255,255,255,0.85); font-size: 16px; }
       .gallery { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
       @media (max-width: 980px) { .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -414,7 +420,7 @@
             <span>Build a page from your channel and try it. It's labelled a preview, it stays out of search, and its only link is back to your channel.</span>
           </div>
           <div class="plan main">
-            <b id="price-plan">Claim it <small>free during launch</small></b>
+            <b id="price-plan">Claim it <small>free</small></b>
             <span>Claim it: prove it's your channel with a code in your channel description, add your link (call, course, product), drop the preview label, and get every lead sent to your webhook. Put it in your link-in-bio, your pinned comments, or embed it on your site.</span>
             <a class="btn" href="./new">Build yours free</a>
           </div>
@@ -423,7 +429,12 @@
             <span>Run it yourself under the MIT license, with your own keys. It costs about a fifth of a cent per question. <a href="https://github.com/cgallic/creator-intake">github.com/cgallic/creator-intake</a></span>
           </div>
         </div>
-        <p class="lede" style="margin-top:18px">No monthly fee, and no cut of what you sell.<span id="price-lede"> Claiming is free during launch; if that changes, pages already claimed stay claimed.</span> AI-clone tools tend to charge every month, take a share of your revenue, and answer as you. This answers about you, and shows the clip.</p>
+        <div class="lifetime" id="lifetime">
+          <div><b id="lt-h">Lifetime Pro</b>
+            <p id="lt-p"></p></div>
+          <button id="lt" type="button">Get Lifetime Pro</button>
+        </div>
+        <p class="lede" style="margin-top:18px">No monthly fee, and no cut of what you sell.<span id="price-lede"> Claiming is free, and pages already claimed stay claimed.</span> AI-clone tools tend to charge every month, take a share of your revenue, and answer as you. This answers about you, and shows the clip.</p>
       </section>
 
       <section class="block">
@@ -541,8 +552,23 @@
 
         /* Pricing copy follows the server: free with no Stripe key, the real price with one. */
         fetch("./api/claim?a=price").then((r) => r.json()).then((p) => {
-          if (!p.paid) return;
           const $$ = (id, t) => { const el = document.getElementById(id); if (el) el.innerHTML = t; };
+          const lt = p.lifetime;
+          if (lt && lt.on) {
+            $$("lt-h", `Lifetime Pro: $${Math.round(lt.price / 100)} once`);
+            $$("lt-p", `For the first ${lt.cap} creators only (${lt.left} left). Every Pro feature for life, as each one ships: a weekly email of what your audience asked, your own domain, and more offers for the page to choose between. Pro will be a monthly plan later. This is the one-payment version.`);
+            document.getElementById("lifetime").classList.add("on");
+            document.getElementById("lt").onclick = async (e) => {
+              e.target.disabled = true;
+              try {
+                const r = await fetch("./api/claim?a=lifetime", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+                const d = await r.json();
+                if (!r.ok || !d.url) throw new Error(d.error || "Try again in a minute.");
+                location.href = d.url;
+              } catch (err) { e.target.disabled = false; $$("lt-p", err.message); }
+            };
+          }
+          if (!p.paid) return;
           const usd = `$${Math.round(p.price / 100)}`;
           $$("price-note", `Free to build. ${usd} once to make it yours. No monthly fee.`);
           $$("price-h", "One price. Once.");

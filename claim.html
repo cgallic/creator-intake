@@ -43,6 +43,10 @@
       .done h2 { color: #fff; font-size: 28px; }
       .done p { color: rgba(255,255,255,0.8); }
       .done .go { background: var(--caption); color: var(--ink); }
+      .lifetime { margin-top: 22px; background: var(--caption); color: var(--ink); border-radius: 20px; padding: 22px; }
+      .lifetime h2 { color: var(--ink); font-size: 24px; }
+      .lifetime p { color: var(--ink) !important; margin: 6px 0 0; font-size: 16px; }
+      .lifetime button { background: var(--ink); color: #fff; margin-top: 14px; }
       pre { background: #fff; color: var(--ink); border-radius: 10px; padding: 12px; font-size: 13px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
     </style>
   </head>
@@ -77,11 +81,37 @@
           <div class="row"><a class="go" href="${esc(rel(url))}">Open your page</a></div>
           <p style="margin-top:18px">Put it in your link-in-bio and pinned comments. To embed it on your site:</p>
           <pre>&lt;iframe src="${esc(new URL(rel("/c/" + slug), location.href).href)}" style="width:100%;height:900px;border:0" loading="lazy"&gt;&lt;/iframe&gt;</pre></div>`;
+        lifetimeOffer();
+      }
+
+      /* Lifetime Pro: shown only while the server says it's on sale. */
+      async function lifetimeOffer() {
+        const p = await api("./api/claim?a=price").catch(() => null);
+        const lt = p && p.lifetime;
+        if (!lt || !lt.on) return;
+        $("#app").insertAdjacentHTML("beforeend", `<div class="lifetime"><h2>Lifetime Pro: $${Math.round(lt.price / 100)} once.</h2>
+          <p>For the first ${lt.cap} creators only (${lt.left} left). Every Pro feature for life, as each one ships: a weekly email of what your audience asked, your own domain, and more offers for the page to choose between. Pro will be a monthly plan later. This is the one-payment version.</p>
+          <button id="lt" type="button">Get Lifetime Pro</button></div>`);
+        $("#lt").onclick = async () => {
+          $("#lt").disabled = true;
+          try { const d = await api("./api/claim?a=lifetime", { c: slug }); location.href = d.url; }
+          catch (e) { $("#lt").disabled = false; status(e.message, true); }
+        };
+      }
+
+      async function lifetimeBack(session) {
+        $("#h").textContent = "Lifetime Pro.";
+        $("#app").innerHTML = `<p class="muted">Confirming your payment…</p>`;
+        try {
+          await api("./api/claim?a=lifetime_done", { session_id: session });
+          $("#app").innerHTML = `<div class="done"><h2>You're in.</h2><p>Lifetime Pro is yours: every Pro feature as it ships, no monthly fee. We'll email you at the address you paid with to set it up.</p>
+            ${slug ? `<div class="row"><a class="go" href="${esc(rel("/c/" + slug))}">Back to your page</a></div>` : `<div class="row"><a class="go" href="./new">Build your page</a></div>`}</div>`;
+        } catch (e) { $("#app").innerHTML = `<p class="status bad">${esc(e.message)}</p>`; }
       }
 
       function pay(id) {
         const price = info ? `$${(info.price / 100).toFixed(0)}` : "$49";
-        $("#app").insertAdjacentHTML("beforeend", `<div class="row" id="payrow"><button class="pay" id="pay">${info && info.paid ? `Claim it for ${price}, once` : "Claim it (free during launch)"}</button></div>`);
+        $("#app").insertAdjacentHTML("beforeend", `<div class="row" id="payrow"><button class="pay" id="pay">${info && info.paid ? `Claim it for ${price}, once` : "Claim it, free"}</button></div>`);
         $("#pay").onclick = async () => {
           $("#pay").disabled = true;
           try {
@@ -111,6 +141,7 @@
       }
 
       async function start() {
+        if (params.get("lifetime")) return lifetimeBack(params.get("lifetime"));
         if (!slug) { $("#app").innerHTML = `<p class="muted">Open this from the page you want to claim, or <a href="./new">build a page</a> first.</p>`; return; }
         try { info = await api(`./api/claim?c=${encodeURIComponent(slug)}`); }
         catch (e) { $("#app").innerHTML = `<p class="status bad">${esc(e.message)}</p>`; return; }
