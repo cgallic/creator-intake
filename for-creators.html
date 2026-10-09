@@ -601,14 +601,15 @@
           const read = (m && m.read) || {};
           const offers = (m && m.offers) || null;
           const want = (read.why || []).find((w) => w.q === "What they want");
-          const wantLabel = want && ((cfg.jev?.intent_labels || {})[want.answer] || want.answer);
+          const WANT = { asking: "just learning", own_problem: "trying to fix their own problem", evaluating: "sizing up what's on offer", wants_creator: `looking to talk to ${p.label}` };
+          const wantLabel = want && (WANT[want.answer] || want.answer);
           const ext = /^https?:/.test(primary.url);
           const preview = cfg.preview && cfg.preview.unofficial;
           const cta = `<a class="demo-cta" href="${esc(primary.url)}" ${ext ? 'target="_blank" rel="noopener"' : ""}>${esc(primary.label)} →</a>`;
 
           if (!offers || offers.length < 2) {
             $("#s4").textContent = "The next step that fits what this person wants.";
-            $("#demo-offer").innerHTML = `<span class="demo-why">${want ? `Jev read this as <b>${esc(wantLabel.toLowerCase())}</b> (${Math.round((want.confidence || 0) * 100)}% sure), so the page leads with:` : "The page leads with:"}</span>${cta}`;
+            $("#demo-offer").innerHTML = `<span class="demo-why">${want ? `Jev read them as <b>${esc(wantLabel)}</b> (${Math.round((want.confidence || 0) * 100)}% sure), so the page leads with:` : "The page leads with:"}</span>${cta}`;
             return;
           }
           $("#s4").textContent = `${p.label} has ${offers.length} offers. Jev scores each one for this person, and the best one wins.`;
@@ -630,6 +631,7 @@
             const t0 = performance.now();
             const tick = (t) => { const k = Math.min(1, (t - t0) / 900); el.querySelector(".pct").textContent = `${Math.round(target * (1 - Math.pow(1 - k, 3)))}%`; if (k < 1) requestAnimationFrame(tick); };
             requestAnimationFrame(tick);
+            setTimeout(() => { el.querySelector(".pct").textContent = `${target}%`; }, 950); // lands even if animation frames are paused
           });
           await wait(1000);
           const picked = order.find((o) => o.url === primary.url);
@@ -638,7 +640,7 @@
           document.querySelectorAll("#deck .ocard").forEach((el) => el.classList.add(clear && el.dataset.id === picked.id ? "win" : "lose"));
           if (!clear) document.querySelectorAll("#deck .ocard").forEach((el) => el.classList.remove("lose"));
           $("#deal-after").innerHTML = `<span class="demo-why">${clear
-            ? `${want ? `They're <b>${esc(wantLabel.toLowerCase())}</b>, and ` : ""}<b>${esc(picked.label)}</b> fits best, so that's the button they get:`
+            ? `${want ? `They're <b>${esc(wantLabel)}</b>, and ` : ""}<b>${esc(picked.label)}</b> fits best, so that's the button they get:`
             : `No clear winner, so the page doesn't guess. It shows the default and asks them one quick question:`}</span>${cta}
             ${preview ? `<span class="demo-claim">These are ${esc(p.label)}'s own products. On your page, they're your offers. <a href="./new" style="color:inherit;font-weight:800">Make one for your channel</a></span>` : ""}`;
         }
