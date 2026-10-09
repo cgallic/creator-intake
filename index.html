@@ -6,6 +6,8 @@
       /* Served under a sub-path by a proxy rewrite (e.g. connorgallic.com/ask, no trailing
          slash)? Resolve ./assets and ./api against that path, not the site root. */
       if (!location.pathname.endsWith("/")) { var b = document.createElement("base"); b.href = location.pathname + "/"; document.head.appendChild(b); }
+      // Written after the base, so the preload scanner can't fetch them from the site root first.
+      document.write('<link rel="stylesheet" href="./styles.css" />');
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Ask</title>
@@ -14,7 +16,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link id="font-link" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Hanken+Grotesk:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" />
     <link id="favicon" rel="icon" href="data:," />
-    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body class="booting">
     <div class="grain" aria-hidden="true"></div>
@@ -100,6 +101,6 @@
 
     <a class="sticky-call" href="#" id="sticky-call" target="_blank" rel="noopener" hidden><span id="sticky-label"></span></a>
 
-    <script src="./script.js"></script>
+    <script>document.write('<script src="./script.js"><\/script>');</script>
   </body>
 </html>

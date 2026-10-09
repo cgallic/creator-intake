@@ -133,4 +133,7 @@ test("custom offers: Jev's clear pick becomes the next step; a close call keeps 
   const spread = mold(cfg, read({ offer: choice("course", { course: 0.34, book: 0.33, watch: 0.33 }, 0.2) }));
   assert.strictEqual(spread.primary.id, "book", "spread odds fall back to the default");
   assert.ok(spread.declined.some((d) => d.q === "Offer"));
+  const loose = mold(cfg, read({ offer: choice("course", { course: 0.42, watch: 0.29, book: 0.28 }, 0.3) }));
+  assert.strictEqual(loose.primary.id, "course", "42% vs a 28% default: the leader leads, never the lower default");
+  assert.strictEqual(loose.alternate.id, "book", "the default stays beside it");
 });
