@@ -3,151 +3,294 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>How it works</title>
-    <meta name="description" content="An ask-me page built from a creator's own videos. A decision model reshapes it around what each visitor asks and does, and asks when it isn't sure." />
+    <title>Answer every question with a video you already made</title>
+    <meta name="description" content="Someone types what's going on. Your page finds the moment you already answered it, plays it from that second, and hands them your offer." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Hanken+Grotesk:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap" />
     <style>
-      .fc { max-width: var(--maxw); margin: 0 auto; padding: 24px clamp(16px, 4vw, 56px) 80px; }
-      .fc-hero { max-width: 760px; margin: 40px 0 36px; }
-      .fc-hero h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(34px, 5vw, 56px); line-height: 1.04; margin: 10px 0 16px; letter-spacing: -0.01em; }
-      .fc-hero p { font-size: 18px; color: var(--ink-soft); margin: 0; }
-      .fc h2 { font-family: var(--serif); font-weight: 600; font-size: 28px; margin: 56px 0 6px; }
-      .fc .lede { color: var(--ink-soft); margin: 0 0 22px; max-width: 720px; }
-      .people { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
-      @media (max-width: 860px) { .people { grid-template-columns: 1fr; } }
-      .person { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 22px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 14px; }
-      .who { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); }
-      .said { font-family: var(--serif); font-size: 19px; line-height: 1.3; margin: 0; }
-      .sec { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px; }
-      .pills { display: flex; flex-wrap: wrap; gap: 6px; }
-      .pill { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--accent-wash); color: var(--accent-deep); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
-      .pill.no { background: var(--paper-2); color: var(--ink-faint); border-color: var(--line); }
-      .pill b { font-family: var(--mono); font-weight: 500; font-size: 11.5px; margin-left: 4px; }
-      .did { margin: 0; padding-left: 18px; font-size: 14.5px; color: var(--ink-soft); }
-      .did li { margin: 3px 0; }
-      .did strong { color: var(--ink); }
-      .thumbs { display: flex; gap: 6px; }
-      .thumbs img { width: 25%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; background: #1d1a15; }
-      .meta { font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); margin-top: auto; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-      .meta a { color: var(--accent); text-decoration: none; font-weight: 500; }
-      .steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-      @media (max-width: 860px) { .steps3 { grid-template-columns: 1fr; } }
-      .step3 { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 20px; }
-      .step3 .n { font-family: var(--mono); font-size: 12px; color: var(--accent); }
-      .step3 h3 { font-family: var(--serif); font-size: 20px; margin: 6px 0 6px; }
-      .step3 p { margin: 0; color: var(--ink-soft); font-size: 15px; }
-      .rules { columns: 2; column-gap: 32px; padding-left: 18px; color: var(--ink-soft); }
-      @media (max-width: 860px) { .rules { columns: 1; } }
-      .rules li { margin: 0 0 8px; break-inside: avoid; }
-      .get { margin-top: 56px; background: var(--secondary); color: #fff; border-radius: var(--r-lg); padding: clamp(24px, 4vw, 40px); display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: center; }
-      @media (max-width: 860px) { .get { grid-template-columns: 1fr; } }
-      .get h2 { color: #fff; margin: 0 0 8px; }
-      .get p { margin: 0; color: rgba(255, 255, 255, 0.78); }
-      .get a { display: inline-flex; justify-content: center; background: var(--accent); color: #fff; text-decoration: none; font-weight: 700; padding: 15px 22px; border-radius: 14px; }
+      :root {
+        --cobalt: #2343e8;
+        --cobalt-deep: #1a32b8;
+        --ink: #10132a;
+        --ink-soft: #4b4f66;
+        --paper: #ffffff;
+        --mist: #eef0fb;
+        --caption: #ffe14d;
+        --rec: #ff3b47;
+        --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body { margin: 0; font-family: var(--font); font-size: 18px; line-height: 1.55; color: var(--ink); background: var(--paper); overflow-x: hidden; }
+      a { color: inherit; }
+      :focus-visible { outline: 3px solid var(--caption); outline-offset: 3px; border-radius: 6px; }
+      .wrap { max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px); }
+
+      /* ---------- hero: cobalt field ---------- */
+      .hero { background: var(--cobalt); color: #fff; padding-bottom: clamp(48px, 7vw, 96px); overflow: hidden; }
+      .bar { display: flex; justify-content: space-between; align-items: center; padding: 22px 0 10px; }
+      .bar a { text-decoration: none; font-weight: 700; font-stretch: 110%; }
+      .bar .try { font-weight: 600; font-stretch: 100%; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+      .hero-grid { display: grid; grid-template-columns: 1.45fr 0.75fr; gap: clamp(28px, 5vw, 72px); align-items: center; padding-top: clamp(24px, 5vw, 64px); }
+      h1 {
+        margin: 0 0 24px;
+        font-weight: 900;
+        font-stretch: 125%;
+        font-size: clamp(44px, 5.6vw, 82px);
+        line-height: 0.9;
+        letter-spacing: -0.035em;
+      }
+      .hero p { font-size: clamp(19px, 1.6vw, 22px); max-width: 30em; margin: 0 0 32px; color: rgba(255, 255, 255, 0.86); }
+      .actions { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; }
+      .btn {
+        display: inline-block; text-decoration: none; font-weight: 800; font-stretch: 112%; font-size: 19px;
+        background: var(--caption); color: var(--ink); padding: 17px 26px; border-radius: 999px;
+        box-shadow: 0 4px 0 rgba(16, 19, 42, 0.35);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+      }
+      .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(16, 19, 42, 0.35); }
+      .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(16, 19, 42, 0.35); }
+      .link { font-weight: 600; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+
+      /* ---------- the phone: a real clip, the comment it answers, burned-in captions ---------- */
+      .phone {
+        position: relative; width: min(100%, 340px); aspect-ratio: 9 / 16; margin: 0 auto;
+        border-radius: 34px; overflow: hidden; background: #000;
+        box-shadow: 0 0 0 10px #0d1030, 0 30px 70px rgba(5, 8, 40, 0.45);
+      }
+      .phone img.frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .phone .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%); }
+      .sticker {
+        position: absolute; left: 7%; right: 7%; top: 9%;
+        background: #fff; color: var(--ink); border-radius: 14px; padding: 10px 13px 11px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.25); transform: rotate(-1.5deg);
+      }
+      .sticker .who { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-soft); font-weight: 600; margin-bottom: 3px; }
+      .sticker .who i { width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg, #9aa6ff, #2343e8); display: inline-block; }
+      .sticker .text { font-size: 15px; line-height: 1.3; font-weight: 600; }
+      .captions {
+        position: absolute; left: 6%; right: 6%; bottom: 17%; text-align: center;
+        font-weight: 900; font-stretch: 100%; font-size: clamp(20px, 2vw, 25px); line-height: 1.12; color: #fff;
+        -webkit-text-stroke: 5px #000; paint-order: stroke fill; text-shadow: 0 3px 0 rgba(0,0,0,0.5);
+        min-height: 2.4em; display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-end; gap: 0 0.28em;
+      }
+      .captions span { transition: color 0.08s linear; }
+      .captions span.now { color: var(--caption); }
+      .scrub { position: absolute; left: 6%; right: 6%; bottom: 7%; }
+      .scrub .meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.6); margin-bottom: 6px; }
+      .scrub .meta b { color: var(--caption); }
+      .scrub .track { height: 4px; border-radius: 4px; background: rgba(255,255,255,0.35); overflow: hidden; }
+      .scrub .fill { height: 100%; width: 0; background: #fff; }
+      .rec { position: absolute; top: 3.2%; left: 7%; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+      .rec::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--rec); }
+
+      /* ---------- sections ---------- */
+      section.block { padding: clamp(56px, 8vw, 110px) 0 0; }
+      h2 { margin: 0 0 14px; font-weight: 900; font-stretch: 118%; font-size: clamp(34px, 4.4vw, 60px); line-height: 0.95; letter-spacing: -0.03em; max-width: 16em; }
+      .lede { max-width: 36em; color: var(--ink-soft); margin: 0 0 44px; font-size: 19px; }
+
+      /* four people, four phones */
+      .people { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 32px); }
+      .person .phone { width: 100%; border-radius: 24px; box-shadow: 0 0 0 7px var(--ink), 0 18px 40px rgba(16, 19, 42, 0.18); }
+      .person .sticker { top: 7%; padding: 8px 10px 9px; border-radius: 11px; }
+      .person .sticker .text { font-size: 13.5px; }
+      .person .captions { font-size: clamp(15px, 1.35vw, 18px); -webkit-text-stroke-width: 4px; bottom: 15%; }
+      .person .scrub .meta span:last-child { display: none; }
+      .options { position: absolute; left: 7%; right: 7%; bottom: 9%; display: flex; flex-direction: column; gap: 7px; }
+      .options .ask-q { color: #fff; font-weight: 800; font-size: 15px; text-shadow: 0 1px 3px rgba(0,0,0,0.6); margin-bottom: 2px; }
+      .options span { background: rgba(255,255,255,0.94); color: var(--ink); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 700; align-self: flex-start; }
+      .person .empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 22% 14% 0; text-align: center; color: rgba(255,255,255,0.8); font-weight: 600; font-size: 15px; background: linear-gradient(160deg, #2343e8 0%, #1a32b8 55%, #10132a 100%); }
+      .person h3 { margin: 22px 0 8px; font-size: 19px; font-weight: 800; font-stretch: 108%; line-height: 1.15; }
+      .person ul { margin: 0 0 12px; padding: 0 0 0 18px; font-size: 15.5px; color: var(--ink-soft); }
+      .person li { margin: 4px 0; }
+      .person li strong { color: var(--ink); }
+      .person .unsure { font-size: 14.5px; color: var(--ink-soft); background: var(--mist); border-radius: 10px; padding: 8px 11px; margin: 0 0 12px; }
+      .person .go { font-weight: 700; font-size: 15.5px; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+
+      /* how yours gets made: a real sequence */
+      .how { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(20px, 3vw, 40px); counter-reset: step; }
+      .how li { background: var(--mist); border-radius: 22px; padding: 26px 26px 28px; counter-increment: step; }
+      .how li::before { content: counter(step); display: block; font-weight: 900; font-stretch: 125%; font-size: 64px; line-height: 0.9; color: var(--cobalt); margin-bottom: 14px; }
+      .how h3 { margin: 0 0 8px; font-size: 23px; font-weight: 800; font-stretch: 110%; line-height: 1.1; }
+      .how p { margin: 0; color: var(--ink-soft); font-size: 17px; }
+
+      .rules { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(24px, 4vw, 64px); }
+      .rules li { padding: 22px 0; border-top: 2px solid var(--ink); }
+      .rules b { display: block; font-size: clamp(21px, 2vw, 26px); font-weight: 800; font-stretch: 112%; line-height: 1.15; margin-bottom: 6px; }
+      .rules span { color: var(--ink-soft); font-size: 17px; }
+
+      .ask { margin: clamp(64px, 9vw, 120px) 0 0; background: var(--ink); color: #fff; padding: clamp(48px, 7vw, 96px) 0; }
+      .ask .row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; align-items: end; }
+      .ask h2 { color: #fff; font-size: clamp(40px, 6vw, 84px); }
+      .ask p { color: rgba(255, 255, 255, 0.8); margin: 0 0 28px; font-size: 19px; max-width: 30em; }
+      footer { background: var(--ink); color: rgba(255,255,255,0.55); font-size: 14px; padding: 0 0 36px; }
+
+      @media (max-width: 980px) {
+        .hero-grid { grid-template-columns: 1fr; }
+        .hero .phone { width: min(78vw, 320px); }
+        .people { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .how { grid-template-columns: 1fr; }
+        .ask .row { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 560px) {
+        .people { grid-template-columns: 1fr; }
+        .person .phone { width: min(100%, 300px); margin: 0 auto; }
+        .rules { grid-template-columns: 1fr; }
+      }
+      @media (prefers-reduced-motion: reduce) { .scrub .fill { transition: none !important; } }
     </style>
   </head>
-  <body class="booting">
-    <div class="grain" aria-hidden="true"></div>
-    <main class="shell">
-      <header class="masthead">
-        <a class="wordmark" href="./"><span class="wordmark-name" id="brand-name"></span><span class="wordmark-sub">How it works</span></a>
-        <div class="masthead-right"><a class="phone-link" href="./"><span class="phone-dot"></span>Try it</a></div>
-      </header>
-
-      <div class="fc">
-        <section class="fc-hero">
-          <p class="eyebrow" style="text-align:left">For creators</p>
-          <h1>One page. Every visitor gets a different one.</h1>
-          <p id="hero-p"></p>
-        </section>
-
-        <h2>Four visitors, four pages</h2>
-        <p class="lede">Real answers from the live page. Each visitor typed one thing; a decision model read only what that tells it, and the page reshaped itself. Where it wasn't sure, it said so, and asked.</p>
-        <div class="people" id="people"></div>
-
-        <h2>How it decides</h2>
-        <p class="lede">Two models with two jobs. A language model writes the answer from the creator's own videos. Jev, a decision model from TypeSafe, never writes a word: it answers typed questions with calibrated odds in about a fifth of a second, and plain code turns those odds into the page.</p>
-        <div class="steps3">
-          <div class="step3"><div class="n">01 · while the answer is written</div><h3>Reads the question</h3><p>Only what one question can really tell you: its topic, and whether they're learning, fixing their own problem, sizing up the product, or want the creator. Plus which of the creator's cards fit.</p></div>
-          <div class="step3"><div class="n">02 · after</div><h3>Judges the videos</h3><p>Every quote is checked word for word against the captions, then Jev checks it's on point. The "watch next" clips come from the same topic, each judged against what the visitor asked.</p></div>
-          <div class="step3"><div class="n">03 · as they use it</div><h3>Learns from what they do</h3><p>Open a clip, tap a card, answer the one-tap question: the page re-reads and reshapes in a quarter second, with no new answer written.</p></div>
+  <body>
+    <header class="hero">
+      <div class="wrap">
+        <nav class="bar"><a href="./" id="home"></a><a class="try" href="./" id="try"></a></nav>
+        <div class="hero-grid">
+          <div>
+            <h1>Answer every question with a video you already made.</h1>
+            <p id="hero-p">Someone types what's going on, in their own words. Your page finds the moment you already answered it, plays it from that second, and hands them your offer.</p>
+            <div class="actions">
+              <a class="btn" id="book" href="#" target="_blank" rel="noopener">Get one for your channel</a>
+              <a class="link" id="try2" href="./"></a>
+            </div>
+          </div>
+          <div id="hero-phone"></div>
         </div>
-
-        <h2>What it won't do</h2>
-        <ul class="rules">
-          <li><strong>Guess who you are.</strong> A topic or intent counts only when the model is confident and clearly ahead of the runner-up. Everything else stays unknown.</li>
-          <li><strong>Ask before it answers.</strong> The one-tap question comes after the answer, only when it's unsure, and it's optional.</li>
-          <li><strong>Put guesses in your mouth.</strong> What it infers changes the layout, never the words of the answer.</li>
-          <li><strong>Quote anyone but the creator.</strong> Interviewers, guests, ads and AI voices are screened out of the videos it can quote.</li>
-          <li><strong>Make up a quote.</strong> A quote shows only if it appears word for word in the creator's captions, and it plays from that second.</li>
-          <li><strong>Remember you on a server.</strong> What it learns about a visitor stays in their own browser.</li>
-        </ul>
-
-        <section class="get">
-          <div><h2 id="get-h">Want one built from your channel?</h2><p id="get-p">Send your YouTube channel. The page is built from your own videos, quotes only you, and ends in your offer.</p></div>
-          <div><a id="get-a" href="#" target="_blank" rel="noopener">Book a call</a></div>
-        </section>
       </div>
+    </header>
 
-      <footer class="site-footer"><p class="copyright" id="footer-line"></p></footer>
+    <main class="wrap">
+      <section class="block">
+        <h2 id="people-h">Four people asked. Four different answers.</h2>
+        <p class="lede" id="people-p">These are real questions typed into the live page. Each person got the clip that answered them, started at the right second, and a different next step. One of them typed “help”, so the page asked what they meant instead of guessing.</p>
+        <div class="people" id="people"></div>
+      </section>
+
+      <section class="block">
+        <h2>How yours gets made.</h2>
+        <p class="lede">You don't write or record anything new. It's built from what you've already posted.</p>
+        <ol class="how">
+          <li><h3>Your channel goes in</h3><p>Every video's captions, down to the second. Clips where someone else is talking, like interviews, ads or a product demo, are left out, so only your words get quoted.</p></li>
+          <li><h3>People ask it things</h3><p>They type it like they'd text a friend. The answer comes from what you've said, and every quote is checked against your captions, word for word, before it shows.</p></li>
+          <li><h3>They get your next step</h3><p>A call, your product, your course. It picks the one that fits what they asked. If it can't tell, it asks them one quick question.</p></li>
+        </ol>
+      </section>
+
+      <section class="block">
+        <h2>What it won't do.</h2>
+        <ul class="rules">
+          <li><b>Put words in your mouth.</b><span>A quote only shows if it's in your captions exactly as you said it.</span></li>
+          <li><b>Quote your guests as you.</b><span>Interviewers and guests are kept as context, never quoted as you.</span></li>
+          <li><b>Guess who someone is.</b><span>It goes by what they asked and what they click. When it's not sure, it asks.</span></li>
+          <li><b>Track people.</b><span>What it picks up about a visitor stays in their own browser.</span></li>
+        </ul>
+      </section>
     </main>
+
+    <section class="ask">
+      <div class="wrap row">
+        <div>
+          <h2>Send me your channel.</h2>
+          <p id="ask-p">I'll build yours from your videos and send you the link. You'll see every answer it gives before anyone else does.</p>
+        </div>
+        <div><a class="btn" id="book2" href="#" target="_blank" rel="noopener">Book 30 minutes</a></div>
+      </div>
+    </section>
+    <footer><div class="wrap" id="footer"></div></footer>
 
     <script>
       (async function () {
+        const $ = (s) => document.querySelector(s);
         const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-        const C = await (await fetch("./data/config.json")).json();
-        const t = C.theme || {};
-        const vars = { paper: "--paper", paper_2: "--paper-2", card: "--card", ink: "--ink", ink_soft: "--ink-soft", ink_faint: "--ink-faint", line: "--line", line_strong: "--line-strong", accent: "--accent", accent_deep: "--accent-deep", accent_wash: "--accent-wash", secondary: "--secondary", secondary_soft: "--secondary-soft", highlight: "--highlight" };
-        for (const [k, v] of Object.entries(vars)) if (t[k]) document.documentElement.style.setProperty(v, t[k]);
-        document.title = `How ${C.brand || "it"} works`;
-        document.getElementById("brand-name").textContent = C.brand || C.name;
-        document.getElementById("hero-p").textContent = `${C.brand || "This page"} answers from ${C.name}'s own videos and plays the second ${C.short_name} said it. Then it shapes the rest of the page around what each visitor asks and does, without pretending to know who they are.`;
-        document.getElementById("footer-line").textContent = C.footer || `© ${new Date().getFullYear()} ${C.name}`;
-        const get = { url: (C.powered_by && C.powered_by.book_url) || C.offer.url };
-        const a = document.getElementById("get-a");
-        a.href = get.url; a.textContent = C.offer.cta_label || "Book a call";
+        const mmss = (t) => `${Math.floor((t || 0) / 60)}:${String((t || 0) % 60).padStart(2, "0")}`;
+        const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-        const lane = (id) => (C.jev && C.jev.lanes && C.jev.lanes[id] ? C.jev.lanes[id].label : id);
-        const intent = (id) => (C.jev && C.jev.intent_labels && C.jev.intent_labels[id]) || id;
-        const pct = (x) => (typeof x === "number" ? `${Math.round(x * 100)}%` : "");
-        try {
-          const demo = await (await fetch("./data/demo.json")).json();
-          document.getElementById("people").innerHTML = demo.visitors.map((v) => {
-            const read = v.read.why.filter((w) => w.q === "Topic" || w.q === "What they want")
-              .map((w) => `<span class="pill">${esc(w.q === "Topic" ? lane(w.answer) : intent(w.answer))}<b>${pct(w.confidence)}</b></span>`).join("");
-            const unsure = v.read.declined.map((w) => `<span class="pill no">${esc(w.q)}: not sure</span>`).join("");
-            const cards = v.components.filter((c) => c.type === "card").map((c) => c.title);
-            const clarify = v.components.find((c) => c.type === "clarify");
-            const moment = v.components.find((c) => c.type === "moment");
-            const more = v.components.find((c) => c.type === "more_moments");
-            const rail = v.components.find((c) => c.type === "rail");
-            const facts = v.components.some((c) => c.type === "facts");
-            const did = [
-              `Main button: <strong>${esc(v.primary.label)}</strong>`,
-              cards.length ? `Showed ${cards.map((c) => `<strong>${esc(c)}</strong>`).join(" and ")}` : "No product cards",
-              clarify ? `Asked: <strong>“${esc(clarify.question)}”</strong>` : null,
-              moment ? `Played the clip from the exact second it answers them${more ? `, plus ${more.n} more` : ""}` : `No clip fit, so none shown`,
-              rail ? `${rail.clips.length} “watch next” clips, each judged against the question` : null,
-              facts ? "Noted their situation to send to " + esc(C.short_name) : null,
-              v.popup ? "Offers a call after a moment" : "No pop-up: they're just learning",
-            ].filter(Boolean).map((x) => `<li>${x}</li>`).join("");
-            const thumbs = rail ? `<div class="thumbs">${rail.clips.slice(0, 4).map((c) => `<img src="${esc(c.thumb)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`).join("")}</div>` : "";
-            return `<article class="person">
-              <div class="who">${esc(v.who)}</div>
-              <p class="said">“${esc(v.q)}”</p>
-              <div><div class="sec">What Jev read</div><div class="pills">${read}${unsure}</div></div>
-              <div><div class="sec">What the page did</div><ul class="did">${did}</ul></div>
-              ${thumbs}
-              <div class="meta"><span>Jev ${v.read.jev_ms + (v.read.judge_ms || 0)} ms · $${v.read.jev_cost.toFixed(5)} · answer $${v.read.llm_cost.toFixed(4)}</span><a href="./?q=${encodeURIComponent(v.q)}">Try it live →</a></div>
-            </article>`;
-          }).join("");
-        } catch (_) {
-          document.getElementById("people").innerHTML = `<p class="lede">Examples aren't available right now. <a href="./">Try the page</a>.</p>`;
+        const C = await (await fetch("./data/config.json")).json();
+        const who = C.short_name;
+        const book = (C.powered_by && C.powered_by.book_url) || C.offer.url;
+        $("#home").textContent = C.brand || `Ask ${who}`;
+        $("#try").textContent = `Try ${who}'s`;
+        $("#try2").textContent = `Ask ${who}'s page something first`;
+        for (const id of ["#book", "#book2"]) $(id).href = book;
+        $("#book2").textContent = `Book 30 minutes with ${who}`;
+        $("#footer").textContent = C.footer || "";
+
+        let demo = { visitors: [] };
+        try { demo = await (await fetch("./data/demo.json")).json(); } catch (_) {}
+        const V = demo.visitors || [];
+        const momentOf = (v) => v.components.find((c) => c.type === "moment");
+        const clarifyOf = (v) => v.components.find((c) => c.type === "clarify");
+        const railOf = (v) => (v.components.find((c) => c.type === "rail") || { clips: [] }).clips;
+
+        /* A phone: the real frame, the comment it answers, captions from the verified quote. */
+        function phone(v, { hero = false } = {}) {
+          const m = momentOf(v);
+          const frame = m ? m.thumb : (railOf(v)[0] || {}).thumb;
+          const words = m ? m.quote.split(/\s+/) : [];
+          return `<div class="phone" data-words="${esc(words.join(" "))}" data-t="${m ? m.t : 0}">
+            ${frame ? `<img class="frame" src="${esc(frame)}" alt="" loading="${hero ? "eager" : "lazy"}" />` : ""}
+            <div class="shade"></div>
+            ${m ? `<div class="rec">@${esc((C.channels && C.channels[0] || "").split("@")[1] || who)}</div>` : ""}
+            <div class="sticker"><div class="who"><i></i>Reply to a visitor</div><div class="text">${esc(v.q)}</div></div>
+            ${m ? `<div class="captions" aria-label="${esc(m.quote)}"></div>
+              <div class="scrub"><div class="meta"><span>from <b>${mmss(m.t)}</b></span><span>${esc(m.title.slice(0, 34))}${m.title.length > 34 ? "…" : ""}</span></div><div class="track"><div class="fill"></div></div></div>`
+              : clarifyOf(v) ? `<div class="empty"></div><div class="options"><div class="ask-q">${esc(clarifyOf(v).question)}</div>${clarifyOf(v).options.slice(0, 4).map((o) => `<span>${esc(o)}</span>`).join("")}</div>`
+              : `<div class="empty">No clip fit this one.</div>`}
+          </div>`;
         }
-        document.body.classList.remove("booting");
+
+        /* Burned-in captions, three or four words at a time, like the clip itself. */
+        function play(el) {
+          const words = (el.dataset.words || "").split(" ").filter(Boolean);
+          const box = el.querySelector(".captions"), fill = el.querySelector(".fill");
+          if (!box || !words.length) return;
+          const chunks = [];
+          for (let i = 0; i < words.length; i += 4) chunks.push(words.slice(i, i + 4));
+          if (still) { box.innerHTML = chunks[0].map((w) => `<span>${esc(w)}</span>`).join(" "); return; }
+          let c = 0, w = 0;
+          const total = words.length;
+          let said = 0;
+          function tick() {
+            if (c >= chunks.length) { c = 0; w = 0; said = 0; setTimeout(tick, 1400); return; }
+            const chunk = chunks[c];
+            box.innerHTML = chunk.map((x, i) => `<span class="${i === w ? "now" : ""}">${esc(x)}</span>`).join(" ");
+            said++;
+            if (fill) fill.style.width = `${(said / total) * 100}%`;
+            w++;
+            if (w >= chunk.length) { w = 0; c++; }
+            setTimeout(tick, 290 + (chunk[w - 1] || "").length * 12);
+          }
+          tick();
+        }
+
+        const lead = V.find(momentOf);
+        if (lead) { $("#hero-phone").innerHTML = phone(lead, { hero: true }); play($("#hero-phone .phone")); }
+
+        $("#people").innerHTML = V.map((v) => {
+          const m = momentOf(v);
+          const cards = v.components.filter((c) => c.type === "card").map((c) => c.title);
+          const clar = v.components.find((c) => c.type === "clarify");
+          const rail = railOf(v);
+          const did = [];
+          if (m) did.push(`Played the clip from <strong>${mmss(m.t)}</strong>, where ${esc(who)} answers it.`);
+          if (clar) did.push(`Asked: <strong>“${esc(clar.question)}”</strong>`);
+          did.push(`Pointed them to <strong>${esc(v.primary.label)}</strong>.`);
+          if (cards.length) did.push(`Showed ${cards.map((c) => `<strong>${esc(c)}</strong>`).join(" and ")}.`);
+          if (rail.length) did.push(`Queued ${rail.length} more clips on the same thing.`);
+          const unsure = (v.read.declined || []).map((d) => (d.q === "Topic" ? "what it was about" : "what they were after"));
+          return `<article class="person">
+            ${phone(v)}
+            <h3>${esc(v.who)}</h3>
+            <ul>${did.map((d) => `<li>${d}</li>`).join("")}</ul>
+            ${unsure.length ? `<p class="unsure">It couldn't tell ${unsure.join(" or ")}, so it didn't guess.</p>` : ""}
+            <a class="go" href="./?q=${encodeURIComponent(v.q)}">Ask it this yourself</a>
+          </article>`;
+        }).join("");
+        if (!V.length) $("#people").innerHTML = `<p class="lede"><a href="./">Ask the page something</a> to see it work.</p>`;
+
+        /* Each small phone starts its captions when it scrolls into view, once. */
+        const io = "IntersectionObserver" in window ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { play(e.target); io.unobserve(e.target); } }), { threshold: 0.5 }) : null;
+        document.querySelectorAll("#people .phone").forEach((p) => (io ? io.observe(p) : play(p)));
       })();
     </script>
   </body>
