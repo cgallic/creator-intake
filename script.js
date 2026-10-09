@@ -41,6 +41,15 @@ const VISITOR = (() => { try { let v = localStorage.getItem("ask-visitor"); if (
 let askSeq = 0;          // ignore a slow answer once a newer question was asked
 let surveyState = {};
 
+/* What we know about this visitor is only what they told us or did here. Kept in
+   their own browser (localStorage), sent with each request so Jev can read it. */
+const EVIDENCE_KEY = "ask-evidence";
+const ev = (() => { try { return JSON.parse(localStorage.getItem(EVIDENCE_KEY)) || {}; } catch (_) { return {}; } })();
+ev.told = ev.told || {}; ev.did = ev.did || []; ev.history = ev.history || [];
+function saveEv() { try { localStorage.setItem(EVIDENCE_KEY, JSON.stringify({ told: ev.told, did: ev.did.slice(-12), history: ev.history.slice(-4) })); } catch (_) {} }
+const cameFrom = (() => { const u = new URLSearchParams(location.search); const r = document.referrer ? new URL(document.referrer).hostname : ""; return [u.get("utm_source"), r && !r.endsWith(location.hostname) ? r : ""].filter(Boolean).join(" via ") || ""; })();
+let primary = null; // the next step Jev's read points to, applied to every CTA on the page
+
 /* ---------- boot: paint the page from the creator's config ---------- */
 function applyConfig() {
   const t = C.theme || {};
@@ -147,7 +156,7 @@ async function runAsk(raw) {
 
   let data = null, error = null;
   try {
-    const r = await fetch("./api/answer", { method: "POST", headers: { "content-type": "application/json", "x-visitor": VISITOR }, body: JSON.stringify({ q: raw }) });
+    const r = await fetch("./api/answer", { method: "POST", headers: { "content-type": "application/json", "x-visitor": VISITOR }, body: JSON.stringify({ q: raw, history: ev.history, did: ev.did, told: ev.told, came_from: cameFrom }) });
     data = await r.json();
     if (!r.ok || data.error) { error = data.error || `Something went wrong (${r.status}).`; data = null; }
   } catch (_) {
@@ -158,6 +167,7 @@ async function runAsk(raw) {
 
   if (error) return renderError(raw, error);
   current = { raw, data };
+  ev.history.push(raw); ev.did = []; saveEv();
   renderAnswer(raw, data);
 }
 
@@ -166,7 +176,15 @@ function echo(raw) {
 }
 
 function offerButton(cls = "call-big", extra = "") {
-  return `<a class="${cls}" href="${esc(C.offer.url)}" target="_blank" rel="noopener" ${extra}>${esc(C.offer.cta_label)} ${ARROW}</a>`;
+  const o = primary || { label: C.offer.cta_label, url: C.offer.url };
+  return `<a class="${cls}" data-primary href="${esc(o.url)}" ${/^https?:/.test(o.url) ? 'target="_blank" rel="noopener"' : ""} ${extra}>${esc(o.label)} ${ARROW}</a>`;
+}
+function applyPrimary(o) {
+  if (!o) return;
+  primary = o;
+  const ext = /^https?:/.test(o.url);
+  for (const [a, l] of [["#header-cta", "#header-cta-label"], ["#sticky-call", "#sticky-label"]]) { $(a).href = o.url; $(l).textContent = o.label; ext ? $(a).setAttribute("target", "_blank") : $(a).removeAttribute("target"); }
+  document.querySelectorAll("[data-primary]").forEach((a) => { a.href = o.url; a.innerHTML = `${esc(o.label)} ${ARROW}`; });
 }
 
 function renderError(raw, msg) {
@@ -230,6 +248,22 @@ const CATALOG = {
       ${c.button ? `<a class="brief-cta card-btn" href="${esc(c.button.url)}" ${/^https?:/.test(c.button.url) ? 'target="_blank" rel="noopener"' : ""}>${esc(c.button.label)}</a>` : ""}
       ${c.secondary ? `<a class="card-secondary" href="${esc(c.secondary.url)}" target="_blank" rel="noopener">${esc(c.secondary.label)} ↗</a>` : ""}
     </div></div>`,
+  clarify: (c) => `
+    <div class="panel d2 clarify" data-clarify="${esc(c.key)}"><div class="panel-pad">
+      <span class="panel-tag"><span class="dot"></span>Help us point you right</span>
+      <p class="clarify-q">${esc(c.question)}</p>
+      <div class="followups">${c.options.map((o) => `<button class="fu" data-tell="${esc(o.id)}">${esc(o.label)}</button>`).join("")}</div>
+      <p class="brief-note" style="text-align:left">One tap, optional. It only changes what this page shows you.</p>
+    </div></div>`,
+  rail: (c) => `
+    <div class="panel d4"><div class="panel-pad">
+      <span class="panel-tag"><span class="dot"></span>Watch next</span>
+      <div class="rail">${c.clips.map((m, i) => `
+        <div class="rail-item" data-rail="${i}" role="button" tabindex="0">
+          <div class="rail-thumb"><img src="${esc(m.thumb)}" alt="" loading="lazy" onerror="this.style.display='none'"/>${PLAY}${m.seconds ? `<span>${mmss(m.seconds)}</span>` : ""}</div>
+          <div class="rail-title">${esc(m.title)}</div>
+        </div>`).join("")}</div>
+    </div></div>`,
   followups: (c) => `
     <div class="panel d3"><div class="panel-pad">
       <span class="panel-tag"><span class="dot"></span>People in your spot also ask</span>
@@ -245,20 +279,37 @@ function renderAnswer(raw, d) {
   answer.innerHTML = `
     ${echo(raw)}
     <h2 class="answer-h">${esc(d.title)}</h2>
-    <p class="answer-sub">${moments[0] ? `A straight answer — and the moment ${esc(WHO)} talks about it on video.` : "A straight answer for what you're dealing with."}</p>
+    <p class="answer-sub">${moments[0] ? `A straight answer — and the moment ${esc(WHO)} talks about it on video.` : "A straight answer for what you're dealing with."} ${d.read ? `<button class="why-btn" id="why-btn" type="button">Why this page?</button>` : ""}</p>
+    <div class="why" id="why" hidden></div>
     <div class="answer-grid">
       <div class="col">${col("main")}</div>
       <div class="col">${col("side")}</div>
     </div>`;
 
+  applyPrimary(d.ui && d.ui.primary);
   streamParas("#synth-body", d.paras || []);
   stickyCall.hidden = false;
-  wireAnswerEvents(moments);
+  wireAnswerEvents(moments, (comps.find((c) => c.type === "rail") || {}).clips || []);
+  renderWhy(d.read);
 
   clearTimeout(window.__sheetTimer);
-  window.__sheetTimer = setTimeout(() => {
+  if (!d.ui || d.ui.popup !== false) window.__sheetTimer = setTimeout(() => {
     if (document.body.classList.contains("answering") && !sheet.classList.contains("show") && vidScrim.hidden) openSheet();
   }, ((d.ui && d.ui.popup_after_seconds) || C.offer.popup_after_seconds || 14) * 1000);
+}
+
+/* "Why this page?": what Jev decided, how sure it was, and what it declined to decide. */
+function renderWhy(read) {
+  const box = $("#why"), btn = $("#why-btn");
+  if (!box || !btn || !read) return;
+  const pct = (x) => (x == null ? "" : ` · ${Math.round(x * 100)}%`);
+  const label = (q, a) => (q === "Topic" && C.jev?.lanes?.[a] ? C.jev.lanes[a].label : q === "What they want" && C.jev?.intent_labels?.[a] ? C.jev.intent_labels[a] : a);
+  box.innerHTML = `
+    <div class="why-h">How this page was shaped</div>
+    <ul>${(read.why || []).map((w) => `<li><b>${esc(w.q)}:</b> ${esc(label(w.q, w.answer))}<span class="why-c">${w.by === "you told us" ? " · you told us" : pct(w.confidence)}</span></li>`).join("")}
+    ${(read.declined || []).map((w) => `<li class="why-no"><b>${esc(w.q)}:</b> not sure (best guess ${esc(label(w.q, w.answer || "?"))}${pct(w.confidence)}), so the page doesn't act on it</li>`).join("")}</ul>
+    <p class="why-foot">Decided by Jev, a decision model that only answers typed questions with calibrated odds${read.jev ? ` · ${read.jev.ms} ms · $${(read.jev.cost || 0).toFixed(5)}` : ""}. Nothing about you is stored anywhere but this browser. <a href="./for-creators">How this works</a></p>`;
+  btn.onclick = () => { box.hidden = !box.hidden; };
 }
 
 function leadMoment(m) {
@@ -348,8 +399,20 @@ function typeHtml(el, html) {
 }
 
 /* ---------- answer interactions ---------- */
-function wireAnswerEvents(moments) {
-  const open = (el) => { const m = moments[+el.dataset.moment]; if (m) openVideo(m); };
+function wireAnswerEvents(moments, rail = []) {
+  const open = (el) => { const m = moments[+el.dataset.moment]; if (m) { openVideo(m); did(`opened clip: ${m.title}`); } };
+  answer.querySelectorAll("[data-rail]").forEach((el) => {
+    const go = () => { const m = rail[+el.dataset.rail]; if (m) { openVideo(m); did(`opened clip: ${m.title}`); } };
+    el.addEventListener("click", go);
+    el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+  answer.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-tell]");
+    if (t) { const key = t.closest("[data-clarify]").dataset.clarify; ev.told[key] = t.dataset.tell; did(`told us ${key}: ${t.textContent}`); t.closest(".clarify").remove(); return; }
+    const a = e.target.closest("a");
+    if (a && a.closest(".card-x")) did(`tapped card: ${a.closest(".card-x").querySelector(".card-title")?.textContent || ""} (${a.textContent.trim()})`);
+    else if (a && a.matches("[data-primary]")) did(`tapped next step: ${a.textContent.trim()}`);
+  });
   answer.querySelectorAll("[data-moment]").forEach((el) => {
     el.addEventListener("click", (e) => { if (e.target.closest("a")) return; open(el); });
     el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(el); } });
@@ -358,6 +421,34 @@ function wireAnswerEvents(moments) {
   const fu = $("#followups");
   if (fu) fu.addEventListener("click", (e) => { const b = e.target.closest(".fu"); if (b) { askInput.value = b.dataset.q; runAsk(b.dataset.q); } });
   const ap = $("#audio-play"); if (ap) ap.addEventListener("click", toggleAudio);
+}
+
+let moldTimer = null;
+function did(what) {
+  ev.did.push(what); saveEv();
+  clearTimeout(moldTimer);
+  moldTimer = setTimeout(remold, 400);
+}
+async function remold() {
+  if (!current) return;
+  try {
+    const r = await fetch("./api/mold", { method: "POST", headers: { "content-type": "application/json", "x-visitor": VISITOR }, body: JSON.stringify({ q: current.raw, history: ev.history.slice(0, -1), did: ev.did, told: ev.told }) });
+    const m = await r.json();
+    if (!r.ok || m.skipped || m.error) return;
+    applyPrimary(m.primary);
+    const side = answer.querySelectorAll(".answer-grid .col")[1];
+    if (side) {
+      side.querySelectorAll(".card-x").forEach((x) => x.remove());
+      const anchor = side.querySelector(".brief-cta, [data-primary]")?.closest(".panel");
+      const html = m.cards.map((c) => CATALOG.card(c)).join("");
+      if (anchor) anchor.insertAdjacentHTML("afterend", html); else side.insertAdjacentHTML("afterbegin", html);
+      const old = side.querySelector(".clarify");
+      if (old) old.remove();
+      if (m.clarify) side.insertAdjacentHTML("afterbegin", CATALOG.clarify(m.clarify));
+    }
+    current.data.read = m.read;
+    renderWhy(m.read);
+  } catch (_) { /* the page simply stays as it is */ }
 }
 
 /* ---------- audio: the browser reads the answer aloud (no key, no server) ---------- */
@@ -387,7 +478,7 @@ function openVideo(m) {
     <div class="vid-info">
       <div class="vi-ch">${esc(C.name)} · from ${mmss(m.t)}</div>
       <div class="vi-title">${esc(m.title)}</div>
-      <div class="vid-transcript"><div class="tlabel">What ${esc(WHO)} says at ${mmss(m.t)} (captions)</div>“${esc(m.quote)}”</div>
+      ${m.quote ? `<div class="vid-transcript"><div class="tlabel">What ${esc(WHO)} says at ${mmss(m.t)} (captions)</div>“${esc(m.quote)}”</div>` : ""}
       <div class="src-links dark"><span class="src-label">Also posted on</span>${sourceLinks(m)}</div>
     </div>`;
   vidScrim.hidden = false; requestAnimationFrame(() => vidScrim.classList.add("show"));
@@ -530,4 +621,6 @@ async function buildClipGrid() {
   applyConfig();
   setupVoice();
   buildClipGrid();
+  const deep = new URLSearchParams(location.search).get("q");
+  if (deep) { askInput.value = deep; runAsk(deep); }
 })();

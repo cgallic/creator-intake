@@ -198,5 +198,81 @@
     "DvJEqttrxG4",
     "go9wecRBI5c",
     "FKkHJt3m8o8"
-  ]
+  ],
+  "jev": {
+    "_note": "Jev decides only the topic (lane) and intent of a question, which cards show and which clips are on point. Everything else waits for what the visitor does. routes[intent][lane or *] picks the primary next step.",
+    "lanes": {
+      "missed_calls": {
+        "label": "Missed calls & answering the phone",
+        "when": "Missing calls, answering the phone, receptionists or answering services, after-hours calls, calling leads back fast in a small business."
+      },
+      "agents": {
+        "label": "Building with AI agents",
+        "when": "Building with AI agents or coding agents: harnesses, prompts, context, evals, agents claiming work is done, tools like Claude Code or Codex."
+      },
+      "solo_company": {
+        "label": "Running a one-person company with AI",
+        "when": "Running a business alone or with a tiny team by automating work with AI; daily operations, systems, productivity."
+      },
+      "customers": {
+        "label": "Getting customers & marketing",
+        "when": "Getting customers or signups: marketing, content, ads, leads, sales, distribution."
+      },
+      "kaicalls": {
+        "label": "KaiCalls itself",
+        "when": "KaiCalls specifically: what it does, its features, setup, price or plans."
+      }
+    },
+    "moves": {
+      "book_call": {
+        "label": "Book 30 min with Connor",
+        "url": "https://www.kaicalls.com/l/XJmd7BiX"
+      },
+      "try_kaicalls": {
+        "label": "Try KaiCalls",
+        "url": "https://www.kaicalls.com/start"
+      },
+      "call_demo": {
+        "label": "Call Kai: 417-835-0402",
+        "url": "tel:+14178350402"
+      },
+      "read_book": {
+        "label": "Read the free book",
+        "url": "https://book.kaicalls.com"
+      },
+      "watch_more": {
+        "label": "More from Connor on YouTube",
+        "url": "https://www.youtube.com/@connorgallic"
+      }
+    },
+    "default_move": "book_call",
+    "routes": {
+      "wants_creator": {
+        "*": "book_call"
+      },
+      "evaluating": {
+        "missed_calls": "try_kaicalls",
+        "kaicalls": "try_kaicalls",
+        "*": "book_call"
+      },
+      "own_problem": {
+        "missed_calls": "call_demo",
+        "kaicalls": "call_demo",
+        "*": "book_call"
+      },
+      "asking": {
+        "missed_calls": "read_book",
+        "kaicalls": "call_demo",
+        "*": "watch_more"
+      }
+    },
+    "ask_lane": "Which is this closest to?",
+    "ask_intent": "What would help next?",
+    "intent_labels": {
+      "asking": "Just learning",
+      "own_problem": "Fixing my own problem",
+      "evaluating": "Checking out KaiCalls",
+      "wants_creator": "Talking to Connor"
+    }
+  }
 }

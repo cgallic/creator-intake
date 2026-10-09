@@ -1,58 +1,143 @@
-// Which components come back is decided by Jev (TypeSafe's System One decision
-// model), not by the LLM. Jev answers a typed questionnaire about what the visitor
-// said: one yes/no ("noul") question per optional component, each returned as a
-// calibrated probability in ~100-500 ms. Code turns the probabilities into a
-// component list with fixed thresholds, so the LLM only writes the words inside
-// whichever components Jev picked. Served by OpenRouter (/api/v1/systemone) with
-// the same OPENROUTER_API_KEY. (Underscore file: Vercel does not route it.)
+// Jev (TypeSafe's System One decision model, via OpenRouter /api/v1/systemone)
+// molds the page. It never writes text: it answers typed questions with calibrated
+// probabilities in ~250-500 ms for ~$0.00003, and plain code acts on them.
+//
+// What one typed question really tells us is its TOPIC (lane) and its INTENT
+// (a general question, their own problem, sizing up the product, or wanting the
+// creator). That is all Jev decides from the text. Everything else about a stranger
+// is unknown until they act: opening a clip, tapping a card, asking again, or
+// answering the one-tap question we show only when Jev is unsure. Those actions
+// re-mold the page with Jev alone, no LLM. Inferences change the LAYOUT, never the
+// words: the answer text is never told what we guessed about the person.
+//
+// (Underscore file: Vercel does not route it.)
 
 const JEV_MODEL = process.env.JEV_MODEL || "typesafe/jev-1.13";
+const ENDPOINT = "https://openrouter.ai/api/v1/systemone";
+const BAR = { lane: 0.6, intent: 0.6 }; // below this, we don't act on it and may ask
+const MARGIN = 0.2; // ...and the top answer must beat the runner-up by this much (confidence ignores the runner-up)
 
-// Built-in components every creator gets. `when` is asked of `said` (the visitor's
-// words); `default` is used when Jev can't be reached. The answer itself and the
-// verified video moments are not optional: the answer always shows, and a moment
-// shows whenever one passed the word-for-word check.
-const BUILT_IN = {
-  steps: { when: "Does the person who wrote `said` need concrete next steps to act on, rather than an explanation or an opinion?", threshold: 0.4, default: true },
-  facts: { when: "Does `said` describe the writer's own situation (their business, project, problem or goal) in enough detail that it is worth noting back to them?", threshold: 0.5, default: true },
-  followups: { when: "Is the person who wrote `said` likely to have follow-up questions about this topic?", threshold: 0.4, default: true },
-  talk_now: { when: "Does the person who wrote `said` have a live, specific problem in their own business or project that a 30-minute call would help with, as opposed to general curiosity?", threshold: 0.6, default: false },
+const INTENTS = {
+  asking: { label: "Just learning", when: "They are asking a general question or are curious about the topic." },
+  own_problem: { label: "Fixing my own problem", when: "They describe a problem in their own business or project and want help with it." },
+  evaluating: { label: "Sizing up the product", when: "They are checking out the creator's product or service: what it does, what it costs, whether it fits." },
+  wants_creator: { label: "Talking to the creator", when: "They want to talk to, hire, or work with the creator directly." },
 };
 
-function questionsFor(config) {
-  const q = {};
-  for (const [id, b] of Object.entries(BUILT_IN)) q[id] = { type: "noul", instructions: b.when };
+async function ask(state, questions, timeoutMs = 4000) {
+  const started = Date.now();
+  const r = await fetch(ENDPOINT, {
+    method: "POST",
+    headers: { authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify({ model: JEV_MODEL, state, questions }),
+    signal: AbortSignal.timeout(+(process.env.JEV_TIMEOUT_MS || timeoutMs)),
+  });
+  const d = await r.json();
+  if (!r.ok || !d.answers) throw new Error(`jev ${r.status}: ${JSON.stringify(d.error || d).slice(0, 200)}`);
+  return { answers: d.answers, model: d.model, ms: Date.now() - started, cost: d.usage?.cost ?? null };
+}
+
+const laneCriteria = (config) => {
+  const c = {};
+  for (const [id, l] of Object.entries(config.jev.lanes)) c[id] = l.when;
+  return { ...c, other: "None of these topics." };
+};
+
+/** The read: topic, intent, and one yes/no per creator card. Runs alongside the LLM. */
+function readQuestions(config) {
+  const q = {
+    lane: { type: "choice", instructions: "Which topic is `said` about? Use `earlier_questions` and `did_on_page` only if `said` builds on them.", criteria: laneCriteria(config) },
+    intent: { type: "choice", instructions: `What does the person who wrote \`said\` want from ${config.short_name}'s page right now? \`did_on_page\` is what they have done here since asking; it outweighs the wording of \`said\`.`, criteria: Object.fromEntries(Object.entries(INTENTS).map(([k, v]) => [k, v.when])) },
+  };
   for (const card of config.cards || []) q[`card_${card.id}`] = { type: "noul", instructions: card.when };
   return q;
 }
 
-async function decide(config, said) {
-  const state = { said, about: `${config.name}: ${config.about}` };
-  const body = { model: JEV_MODEL, state, questions: questionsFor(config) };
-  const started = Date.now();
-  const r = await fetch("https://openrouter.ai/api/v1/systemone", {
-    method: "POST",
-    headers: { authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(+(process.env.JEV_TIMEOUT_MS || 4000)),
-  });
-  const d = await r.json();
-  if (!r.ok || !d.answers) throw new Error(`jev ${r.status}: ${JSON.stringify(d.error || d).slice(0, 200)}`);
-  const p = {};
-  for (const [id, a] of Object.entries(d.answers)) p[id] = typeof a.noul === "number" ? a.noul : null;
-  return { p, model: d.model, ms: Date.now() - started, cost: d.usage?.cost ?? null };
+async function read(config, said, { history = [], did = [], cameFrom = "" } = {}) {
+  const state = { said, earlier_questions: history.slice(-4), did_on_page: did.slice(-12), came_from: cameFrom || "unknown", creator: `${config.name}: ${config.about}` };
+  return ask(state, readQuestions(config));
 }
 
-/** Probabilities -> on/off per component. Missing or failed answers fall back to defaults. */
-function pick(config, p) {
-  const on = {};
-  for (const [id, b] of Object.entries(BUILT_IN)) on[id] = p && typeof p[id] === "number" ? p[id] >= b.threshold : b.default;
+/** Plain code from probabilities (and anything the visitor told us) to the page. */
+function mold(config, r, told = {}) {
+  const j = config.jev;
+  const a = r ? r.answers : {};
+  const why = [], declined = [];
+
+  const settle = (key, options, label) => {
+    if (told[key] && options[told[key]]) { why.push({ q: label, answer: told[key], confidence: 1, by: "you told us" }); return told[key]; }
+    const x = a[key];
+    if (!x || !x.choice) { declined.push({ q: label, reason: "Jev unavailable" }); return null; }
+    const entry = { q: label, answer: x.choice, confidence: x.confidence ?? 0, probabilities: x.probabilities, by: "Jev" };
+    const sorted = Object.values(x.probabilities || {}).sort((p1, p2) => p2 - p1);
+    const margin = sorted.length > 1 ? sorted[0] - sorted[1] : 1;
+    if (entry.confidence >= BAR[key] && margin >= MARGIN && x.choice !== "other") { why.push(entry); return x.choice; }
+    declined.push({ ...entry, reason: `under ${Math.round(BAR[key] * 100)}% sure, so the page doesn't act on it` });
+    return null;
+  };
+  const lane = settle("lane", j.lanes, "Topic");
+  const intent = settle("intent", INTENTS, "What they want");
+
+  // Primary next step: routes[intent][lane] -> routes[intent]["*"] -> default.
+  const route = (intent && j.routes[intent]) || {};
+  const moveId = (lane && route[lane]) || route["*"] || j.default_move;
+  const m = j.moves[moveId] || j.moves[j.default_move];
+  const primary = { id: moveId, label: m.label, url: m.url };
+
   const cards = (config.cards || [])
-    .map((c) => ({ c, prob: p ? p[`card_${c.id}`] : null }))
-    .filter(({ c, prob }) => typeof prob === "number" && prob >= (c.threshold ?? 0.5))
-    .sort((a, b) => b.prob - a.prob)
+    .map((c) => ({ c, p: a[`card_${c.id}`] && typeof a[`card_${c.id}`].noul === "number" ? a[`card_${c.id}`].noul : null }))
+    .map((x) => { if (x.p != null) why.push({ q: `Card: ${x.c.title}`, answer: x.p >= (x.c.threshold ?? 0.5) ? "show" : "hide", confidence: x.p, by: "Jev" }); return x; })
+    .filter(({ c, p }) => p != null && p >= (c.threshold ?? 0.5))
+    .sort((x, y) => y.p - x.p)
     .map(({ c }) => c);
-  return { on, cards };
+
+  // Only ask when it matters and we don't know: topic first, then intent. After the answer, optional.
+  let clarify = null;
+  if (r && !lane && !told.lane) clarify = { key: "lane", question: j.ask_lane || "Which is this closest to?", options: Object.entries(j.lanes).map(([id, l]) => ({ id, label: l.label })) };
+  else if (r && !intent && !told.intent) clarify = { key: "intent", question: j.ask_intent || "What would help next?", options: Object.entries(INTENTS).map(([id, i]) => ({ id, label: (j.intent_labels || {})[id] || i.label })) };
+
+  return {
+    decided: !!r,
+    lane, intent, primary, cards, clarify,
+    show_facts: intent === "own_problem" || intent === "evaluating" || intent === "wants_creator",
+    popup: !!intent && intent !== "asking",
+    why, declined,
+  };
 }
 
-module.exports = { decide, pick, questionsFor, BUILT_IN, JEV_MODEL };
+/** After the LLM: is each verified quote really on point, and which clips go in the rail.
+    Ranking quality drops when many items share one request (field reports: batching 40
+    rows broke a passing ranking test), so items go in small parallel groups of 4. */
+async function judge(config, said, moments, candidates) {
+  const items = [
+    ...moments.map((x, i) => ({ key: `m${i}`, kind: "passage", text: `${x.title}: "${x.quote}"`, q: "Does `item` speak directly to what `said` asks or describes?" })),
+    ...candidates.map((x, i) => ({ key: `v${i}`, kind: "video", text: x.title, q: "Would the person who wrote `said` want to watch the video titled `item` next?" })),
+  ];
+  if (!items.length) return null;
+  const groups = [];
+  for (let i = 0; i < items.length; i += 4) groups.push(items.slice(i, i + 4));
+  const started = Date.now();
+  const results = await Promise.all(groups.map((g) => {
+    const state = { said, items: Object.fromEntries(g.map((it) => [it.key, it.text])) };
+    const questions = Object.fromEntries(g.map((it) => [it.key, { type: "noul", instructions: it.q.replace("`item`", `\`items.${it.key}\``) }]));
+    return ask(state, questions, 3000).catch(() => null);
+  }));
+  const answers = {};
+  let cost = 0;
+  for (const r of results) if (r) { Object.assign(answers, r.answers); cost += r.cost || 0; }
+  if (!Object.keys(answers).length) return null;
+  return { answers, ms: Date.now() - started, cost, requests: groups.length };
+}
+
+/** Build time: tag clips with their lane, a batch per call. */
+async function tagLanes(config, clips) {
+  const state = { clips: {} };
+  const questions = {};
+  clips.forEach((c, i) => {
+    state.clips[`c${i}`] = `${c.title}. ${c.lines.filter((l) => l.who !== "other").map((l) => l.text).join(" ").slice(0, 700)}`;
+    questions[`c${i}`] = { type: "choice", instructions: `Which topic is the video \`clips.c${i}\` mainly about?`, criteria: laneCriteria(config) };
+  });
+  return ask(state, questions, 20000);
+}
+
+module.exports = { read, mold, judge, tagLanes, readQuestions, INTENTS, BAR, MARGIN, JEV_MODEL };

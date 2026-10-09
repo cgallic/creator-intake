@@ -171,100 +171,104 @@ async function askAnthropic(q) {
 
 const ask = (q) => (process.env.OPENROUTER_API_KEY ? askOpenRouter(q) : askAnthropic(q));
 
-/* Spend cap. OpenRouter keeps a running total per key (usage_daily / usage_monthly,
-   in USD). Before each question we read it (cached 30s per instance) and stop
-   answering once either cap is hit. The counter is per key, so if the key is
-   shared with another app, that app's spend counts too and the cap trips early;
-   a key of its own makes the cap exact. Fails closed: if the counter can't be
-   read, we don't answer. */
-const DAILY_CAP = +(process.env.ANSWER_DAILY_CAP_USD || 5);
-const MONTHLY_CAP = +(process.env.ANSWER_MONTHLY_CAP_USD || 30);
-let spend = { at: 0, daily: 0, monthly: 0 };
-async function overCap() {
-  if (!process.env.OPENROUTER_API_KEY) return false;
-  if (Date.now() - spend.at > 30e3) {
-    try {
-      const r = await fetch("https://openrouter.ai/api/v1/key", { headers: { authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` } });
-      const d = (await r.json()).data || {};
-      spend = { at: Date.now(), daily: +d.usage_daily || 0, monthly: +d.usage_monthly || 0 };
-    } catch (e) {
-      console.error("spend check failed:", e && e.message);
-      return true;
-    }
-  }
-  return spend.daily >= DAILY_CAP || spend.monthly >= MONTHLY_CAP;
-}
-
-// Best-effort, per function instance. A visitor is the page's random visitor id
-// (x-visitor), falling back to IP: behind a proxy rewrite (e.g. connorgallic.com/ask)
-// every request arrives from the proxy's IP. ANSWER_CAP_PER_HOUR is the spend guard
-// across all visitors. Real protection for a big public push is a Vercel Firewall
-// rate limit on /api/answer (see README).
-const hits = new Map();
-const PER_VISITOR = +(process.env.ANSWER_LIMIT_PER_HOUR || 30);
-const PER_INSTANCE = +(process.env.ANSWER_CAP_PER_HOUR || 300);
-function limited(who) {
-  const now = Date.now(), fresh = (k) => (hits.get(k) || []).filter((t) => now - t < 3600e3);
-  const mine = fresh(who), all = fresh("*");
-  mine.push(now); all.push(now); hits.set(who, mine); hits.set("*", all);
-  return mine.length > PER_VISITOR || all.length > PER_INSTANCE;
-}
-
+const guard = require("./_guard");
 const jev = require("./_jev");
 
-/* The response is a component list (A2UI-style): the server decides what shows
-   and in which column, the page only renders it. Jev picks the optional pieces;
-   the LLM's text fills them; config.cards supply the creator's fixed cards. */
-function compose(p, moments, picked) {
-  const { on, cards } = picked;
+/* Rail candidates: clips from the visitor's topic lane (tagged at build time by
+   build/tag-lanes.mjs), not already quoted, pre-sorted by word overlap with what they
+   said so Jev only judges ~16. Unknown lane: the whole corpus, same pre-sort. */
+const STOP = new Set("the a an and or but to of in on for with is are was it i my me you your we our this that what how do does can should at by from be have has not just so if about".split(" "));
+const words = (t) => new Set(String(t).toLowerCase().match(/[a-z0-9']{3,}/g)?.filter((w) => !STOP.has(w)) || []);
+function railCandidates(said, lane, exclude, n = 16) {
+  const want = words(said);
+  return corpus.clips
+    .filter((c) => !exclude.has(c.id) && (!lane || c.lane === lane))
+    .map((c) => {
+      const w = words(c.title + " " + c.lines.slice(0, 4).map((l) => l.text).join(" "));
+      let o = 0;
+      for (const x of want) if (w.has(x)) o++;
+      return { c, o };
+    })
+    .sort((a, b) => b.o - a.o || String(b.c.published).localeCompare(String(a.c.published)))
+    .slice(0, n)
+    .map(({ c }) => c);
+}
+const railItem = (c) => ({ source_id: c.id, title: c.title, youtube_id: c.youtube_id, seconds: c.seconds, thumb: c.thumb, vertical: !!c.vertical, published: c.published, links: c.links || [], t: 0, url: c.url });
+
+/* The response is a component list (A2UI-style). Jev's read decides the layout; the
+   LLM's text fills it; config.cards are the creator's fixed cards. */
+function compose(p, moments, rail, m) {
   const c = [{ type: "answer", column: "main", title: p.title, paras: p.paras }];
   c.push(moments[0] ? { type: "moment", column: "main", moment: moments[0] } : { type: "no_moment", column: "main" });
   if (moments.length > 1) c.push({ type: "more_moments", column: "main", moments: moments.slice(1) });
-  if (on.steps && (p.steps || []).length) c.push({ type: "steps", column: "main", steps: p.steps });
-  c.push(on.facts ? { type: "facts", column: "side", facts: p.facts } : { type: "offer", column: "side" });
-  for (const card of cards) c.push({ type: "card", column: "side", id: card.id, kicker: card.kicker, title: card.title, body: card.body, button: card.button, secondary: card.secondary });
-  if (on.followups && (p.followups || []).length) c.push({ type: "followups", column: "side", followups: p.followups });
+  if ((p.steps || []).length) c.push({ type: "steps", column: "main", steps: p.steps });
+  if (rail.length) c.push({ type: "rail", column: "main", clips: rail });
+  if (m.clarify) c.push({ type: "clarify", column: "side", ...m.clarify });
+  c.push(m.show_facts ? { type: "facts", column: "side", facts: p.facts } : { type: "offer", column: "side" });
+  for (const card of m.cards) c.push({ type: "card", column: "side", id: card.id, kicker: card.kicker, title: card.title, body: card.body, button: card.button, secondary: card.secondary });
+  if ((p.followups || []).length) c.push({ type: "followups", column: "side", followups: p.followups });
   return c;
 }
 
 const fallback = () => `We couldn't answer that here. ${config.offer.fallback || ""}`.trim();
+const jevOn = () => !!(process.env.OPENROUTER_API_KEY && process.env.JEV_OFF !== "1" && config.jev);
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "POST { q }" });
-  const q = String((req.body && req.body.q) || "").trim().slice(0, 1200);
+  const b = req.body || {};
+  const q = String(b.q || "").trim().slice(0, 1200);
   if (!q) return res.status(400).json({ error: "Missing 'q'." });
-  const visitor = String(req.headers["x-visitor"] || "").slice(0, 64) || String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "").split(",")[0].trim();
-  if (limited(visitor)) return res.status(429).json({ error: "That's a lot of questions for one hour. Try again a little later." });
-  if (await overCap()) {
-    console.warn("answer: spend cap reached", JSON.stringify({ daily: spend.daily, monthly: spend.monthly, DAILY_CAP, MONTHLY_CAP }));
+  if (guard.limited(guard.visitorOf(req))) return res.status(429).json({ error: "That's a lot of questions for one hour. Try again a little later." });
+  if (await guard.overCap()) {
+    console.warn("answer: spend cap reached", JSON.stringify(guard.spend()));
     return res.status(429).json({ error: `${WHO} is taking a breather from answering here today. ${config.offer.fallback || ""}`.trim() });
   }
+  const ctx = {
+    history: (Array.isArray(b.history) ? b.history : []).map(String).slice(-4),
+    did: (Array.isArray(b.did) ? b.did : []).map(String).slice(-12),
+    cameFrom: String(b.came_from || "").slice(0, 200),
+  };
+  const told = b.told && typeof b.told === "object" ? b.told : {};
 
   try {
-    // Jev (what to show) runs alongside the LLM (what to say), so it adds no wait.
-    const decision = process.env.OPENROUTER_API_KEY && process.env.JEV_OFF !== "1"
-      ? jev.decide(config, q).catch((e) => { console.warn("jev:", e && e.message); return null; })
-      : Promise.resolve(null);
-    const [out, d] = await Promise.all([ask(q), decision]);
+    // Jev reads the question (topic, intent, cards) while the LLM writes the answer.
+    const reading = jevOn() ? jev.read(config, q, ctx).catch((e) => { console.warn("jev read:", e && e.message); return null; }) : Promise.resolve(null);
+    const [out, r] = await Promise.all([ask(q), reading]);
     if (out.refusal) return res.status(200).json({ error: fallback() });
     const p = out.parsed;
-    const moments = [], dropped = [];
-    for (const m of p.moments || []) {
-      const v = verifyMoment(m);
-      if (v.ok && !moments.some((x) => x.source_id === m.source_id)) moments.push(shapeMoment(m, v));
-      else if (!v.ok) dropped.push({ source_id: m.source_id, reason: v.reason });
+    const m = jev.mold(config, r, told);
+
+    let moments = [];
+    const dropped = [];
+    for (const x of p.moments || []) {
+      const v = verifyMoment(x);
+      if (v.ok && !moments.some((y) => y.source_id === x.source_id)) moments.push(shapeMoment(x, v));
+      else if (!v.ok) dropped.push({ source_id: x.source_id, reason: v.reason });
     }
     if (dropped.length) console.warn("answer: dropped unverified moments", JSON.stringify(dropped));
-    const picked = jev.pick(config, d && d.p);
+
+    // Jev judges the videos: is each verified quote on point, and which clips go in the rail.
+    const candidates = railCandidates(q, m.lane, new Set(moments.map((x) => x.source_id)));
+    let rail = [], judged = null;
+    if (jevOn()) judged = await jev.judge(config, q, moments, candidates).catch((e) => { console.warn("jev judge:", e && e.message); return null; });
+    if (judged) {
+      const pm = (i) => judged.answers[`m${i}`]?.noul ?? 1;
+      const before = moments.length;
+      moments = moments.map((x, i) => ({ x, p: pm(i) })).filter(({ p }) => p >= 0.35).sort((a, z) => z.p - a.p).map(({ x, p }) => ({ ...x, relevance: p }));
+      if (moments.length < before) m.why.push({ q: "Clips", answer: `dropped ${before - moments.length} quote(s) judged off-topic`, by: "Jev" });
+      rail = candidates.map((c, i) => ({ c, p: judged.answers[`v${i}`]?.noul ?? 0 })).filter(({ p }) => p >= 0.5).sort((a, z) => z.p - a.p).slice(0, 4).map(({ c, p }) => ({ ...railItem(c), relevance: p }));
+      m.why.push({ q: "More videos", answer: `${rail.length} of ${candidates.length} ${m.lane ? `“${config.jev.lanes[m.lane].label}”` : "candidate"} clips judged worth watching next`, by: "Jev" });
+    }
+
     return res.status(200).json({
       title: p.title,
       paras: p.paras,
-      components: compose(p, moments, picked),
-      ui: { popup_after_seconds: picked.on.talk_now ? (config.offer.popup_hot_seconds || 6) : (config.offer.popup_after_seconds || 14) },
+      components: compose(p, moments, rail, m),
+      ui: { primary: m.primary, popup: m.popup, popup_after_seconds: config.offer.popup_after_seconds || 14 },
+      read: { lane: m.lane, intent: m.intent, why: m.why, declined: m.declined, jev: r ? { model: r.model, ms: r.ms, cost: r.cost } : null, judge: judged ? { ms: judged.ms, cost: judged.cost } : null },
       moments,
       facts: p.facts,
       dropped: dropped.length,
-      decided_by: d ? { model: d.model, ms: d.ms, cost: d.cost, p: d.p } : "defaults (Jev unavailable)",
       model: out.model,
       cache_read_tokens: out.usage?.cache_read_input_tokens ?? null,
       cost: out.usage?.cost ?? null,
