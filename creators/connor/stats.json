@@ -1,0 +1,76 @@
+{
+ "creator": "Connor Gallic",
+ "uploads_on_channel": 2347,
+ "uploads_looked_at": 700,
+ "with_captions": 642,
+ "cut_not_on_camera": 57,
+ "cut_ai_voice": 4,
+ "cut_duplicates": 33,
+ "clips": 548,
+ "words": 81463,
+ "hours": 8.2,
+ "lanes": [
+  {
+   "id": "agents",
+   "label": "Building with AI agents",
+   "n": 279
+  },
+  {
+   "id": "other",
+   "label": "Everything else",
+   "n": 78
+  },
+  {
+   "id": "kaicalls",
+   "label": "KaiCalls itself",
+   "n": 72
+  },
+  {
+   "id": "missed_calls",
+   "label": "Missed calls & answering the phone",
+   "n": 66
+  },
+  {
+   "id": "customers",
+   "label": "Getting customers & marketing",
+   "n": 33
+  },
+  {
+   "id": "solo_company",
+   "label": "Running a one-person company with AI",
+   "n": 20
+  }
+ ],
+ "check": {
+  "title": "Why Plumbers Lose Jobs in 90 Seconds",
+  "quote": "So, here's what actually happens when a plumber misses the call. The customer is not going to leave a voicemail. Nobody leaves voicemails anymore. They hang up.",
+  "t": 0,
+  "lines": [
+   {
+    "t": 0,
+    "text": "So, here's what actually happens when a plumber misses the call. The customer is not going to leave a voicemail. Nobody leaves voicemails anymore. They hang up.",
+    "who": "creator"
+   },
+   {
+    "t": 8,
+    "text": "They're going to go hit the next guy on Google, and that job is going to be gone in 90 seconds. You've lost it. You're gone. Go home.",
+    "who": "creator"
+   },
+   {
+    "t": 15,
+    "text": "[cough and clears throat]",
+    "who": "creator"
+   },
+   {
+    "t": 15,
+    "text": "My phone stopped doing that to me the day a secretary stop started picking up everything, and that's all you need.",
+    "who": "creator"
+   },
+   {
+    "t": 22,
+    "text": "That's it.",
+    "who": "creator"
+   }
+  ]
+ }
+}

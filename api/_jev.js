@@ -72,7 +72,7 @@ function mold(config, r, told = {}) {
     const sorted = Object.values(x.probabilities || {}).sort((p1, p2) => p2 - p1);
     const margin = sorted.length > 1 ? sorted[0] - sorted[1] : 1;
     if (entry.confidence >= BAR[key] && margin >= MARGIN && x.choice !== "other") { why.push(entry); return x.choice; }
-    declined.push({ ...entry, reason: `under ${Math.round(BAR[key] * 100)}% sure, so the page doesn't act on it` });
+    declined.push({ ...entry, reason: x.choice === "other" ? "doesn't fit any of the options, so the page doesn't act on it" : entry.confidence < BAR[key] ? `under ${Math.round(BAR[key] * 100)}% sure, so the page doesn't act on it` : "too close to the runner-up, so the page doesn't act on it" });
     return null;
   };
   const lane = settle("lane", j.lanes, "Topic");

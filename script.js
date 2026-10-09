@@ -307,7 +307,7 @@ function renderWhy(read) {
   box.innerHTML = `
     <div class="why-h">How this page was shaped</div>
     <ul>${(read.why || []).map((w) => `<li><b>${esc(w.q)}:</b> ${esc(label(w.q, w.answer))}<span class="why-c">${w.by === "you told us" ? " · you told us" : pct(w.confidence)}</span></li>`).join("")}
-    ${(read.declined || []).map((w) => `<li class="why-no"><b>${esc(w.q)}:</b> not sure (best guess ${esc(label(w.q, w.answer || "?"))}${pct(w.confidence)}), so the page doesn't act on it</li>`).join("")}</ul>
+    ${(read.declined || []).map((w) => `<li class="why-no"><b>${esc(w.q)}:</b> ${w.answer === "other" ? "didn't fit any of the options" : `not sure (best guess ${esc(label(w.q, w.answer || "?"))}${pct(w.confidence)})`}, so the page doesn't act on it</li>`).join("")}</ul>
     <p class="why-foot">Decided by Jev, a decision model that only answers typed questions with calibrated odds${read.jev ? ` · ${read.jev.ms} ms · $${(read.jev.cost || 0).toFixed(5)}` : ""}. Nothing about you is stored anywhere but this browser. <a href="./for-creators">How this works</a></p>`;
   btn.onclick = () => { box.hidden = !box.hidden; };
 }

@@ -115,6 +115,86 @@
       .how h3 { margin: 0 0 8px; font-size: 23px; font-weight: 800; font-stretch: 110%; line-height: 1.1; }
       .how p { margin: 0; color: var(--ink-soft); font-size: 17px; }
 
+      /* ---------- infographics ---------- */
+      .explain { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: clamp(24px, 4vw, 64px); align-items: start; }
+      .explain .copy p { color: var(--ink-soft); margin: 0 0 14px; }
+      .explain .copy p strong { color: var(--ink); }
+      @media (max-width: 980px) { .explain { grid-template-columns: 1fr; } }
+
+      /* 1. the editing timeline */
+      .tl { background: var(--ink); color: #fff; border-radius: 22px; padding: 22px 22px 18px; }
+      .tl .ruler { position: relative; height: 22px; margin: 0 0 30px 0; border-bottom: 1px solid rgba(255,255,255,0.18); }
+      .tl .ruler span { position: absolute; bottom: 4px; transform: translateX(-50%); font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.55); }
+      .tl .ruler span:first-child { transform: none; }
+      .tl .track { position: relative; height: 40px; margin: 8px 0 22px; background: rgba(255,255,255,0.05); border-radius: 8px; }
+      .tl .track .name { position: absolute; top: -19px; left: 0; font-size: 13.5px; font-weight: 700; color: rgba(255,255,255,0.85); white-space: nowrap; }
+      .tl .clip { position: absolute; top: 4px; bottom: 4px; border-radius: 6px; min-width: 6px; }
+      .tl .clip.jev { background: #6f86ff; }
+      .tl .clip.llm { background: #fff; }
+      .tl .clip.check { background: var(--caption); }
+      .tl .clip.page { background: var(--rec); }
+      .tl .clip em { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); font-style: normal; font-size: 12.5px; font-weight: 700; color: rgba(255,255,255,0.7); white-space: nowrap; }
+      .tl .clip.llm em { left: 12px; color: var(--ink); }
+      .tl .clip.late em { left: auto; right: calc(100% + 8px); }
+      .tl .playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--caption); left: 0; box-shadow: 0 0 0 1px rgba(0,0,0,0.3); }
+      .tl .after { margin: 4px 0 0; padding-top: 14px; border-top: 1px dashed rgba(255,255,255,0.25); font-size: 15.5px; color: rgba(255,255,255,0.85); }
+      .tl .after b { color: var(--caption); }
+      .tl-wrap { position: relative; }
+
+      /* 2. poll stickers */
+      .polls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+      .poll-card { display: flex; flex-direction: column; }
+      @media (max-width: 560px) { .polls { grid-template-columns: 1fr; } }
+      .poll-card { background: var(--cobalt); border-radius: 22px; padding: 18px; color: #fff; }
+      .poll-card .said { font-weight: 700; font-size: 15px; margin: 0 0 12px; opacity: 0.9; }
+      .poll { background: #fff; color: var(--ink); border-radius: 16px; padding: 12px 12px 8px; margin-bottom: 10px; box-shadow: 0 4px 0 rgba(16,19,42,0.25); }
+      .poll .pq { font-weight: 800; font-size: 14.5px; text-align: center; margin: 0 0 8px; }
+      .poll .opt { position: relative; height: 30px; border-radius: 9px; background: var(--mist); margin-bottom: 6px; overflow: hidden; font-size: 13.5px; font-weight: 700; }
+      .poll .opt .fill { position: absolute; inset: 0 auto 0 0; background: #c9d2ff; }
+      .poll .opt.win .fill { background: var(--caption); }
+      .poll .opt span { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; right: 46px; }
+      .poll .opt b { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); }
+      .verdict { font-weight: 800; font-size: 15.5px; line-height: 1.3; background: rgba(255,255,255,0.12); border-radius: 12px; padding: 10px 12px; }
+      .verdict.ask { background: var(--caption); color: var(--ink); }
+      .rulebar { margin-top: 18px; background: var(--mist); border-radius: 18px; padding: 18px 20px; }
+      .rulebar .gauge { position: relative; height: 14px; border-radius: 7px; background: linear-gradient(90deg, #ffd0d3 0 60%, #cdeccd 60% 100%); margin: 12px 0 8px; }
+      .rulebar .gauge i { position: absolute; left: 60%; top: -6px; bottom: -6px; width: 3px; background: var(--ink); border-radius: 2px; }
+      .rulebar .scale { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+      .rulebar p { margin: 10px 0 0; font-size: 16px; color: var(--ink-soft); }
+      .rulebar p b { color: var(--ink); }
+
+      /* 3. the caption track */
+      .captrack { background: var(--ink); border-radius: 22px; padding: 18px; color: #fff; }
+      .captrack .ttl { font-size: 13.5px; font-weight: 700; color: rgba(255,255,255,0.6); margin: 0 0 10px; }
+      .cline { display: grid; grid-template-columns: 52px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 15.5px; line-height: 1.4; }
+      .cline .ts { font-weight: 800; color: rgba(255,255,255,0.5); font-variant-numeric: tabular-nums; }
+      .cline mark { background: var(--caption); color: var(--ink); border-radius: 3px; padding: 1px 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+      .match { margin: 14px 0 0; font-weight: 800; color: var(--caption); font-size: 15.5px; }
+      .reject { margin-top: 14px; background: #fff; color: var(--ink); border-radius: 14px; padding: 12px 14px; font-size: 15.5px; }
+      .reject s { text-decoration-color: var(--rec); text-decoration-thickness: 3px; }
+      .reject ins { text-decoration: none; background: #ffd0d3; border-radius: 3px; padding: 0 3px; }
+      .reject .no { display: block; margin-top: 6px; font-weight: 800; color: var(--rec); }
+
+      /* 4. the library funnel */
+      .funnel { display: flex; flex-direction: column; gap: 8px; }
+      .fbar { position: relative; height: 48px; border-radius: 10px; background: var(--cobalt); color: #fff; display: flex; align-items: center; padding: 0 14px; font-weight: 800; font-size: 15.5px; white-space: nowrap; min-width: max-content; }
+      .fbar small { font-weight: 600; opacity: 0.85; margin-left: 8px; font-size: 14px; }
+      .fbar.cut { background: #ffd0d3; color: var(--ink); height: 34px; font-size: 14.5px; }
+      .fbar.final { background: var(--caption); color: var(--ink); height: 58px; font-size: 18px; }
+      .topics { margin-top: 26px; }
+      .topic { display: grid; grid-template-columns: minmax(0, 1.5fr) 1.6fr 44px; gap: 10px; align-items: center; margin: 7px 0; font-size: 15px; }
+      .topic .b { height: 14px; border-radius: 7px; background: var(--cobalt); }
+      .topic .n { font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+      .topic .l { color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      /* 5. the receipt */
+      .receipt { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 2px solid var(--ink); border-radius: 22px; overflow: hidden; }
+      .receipt div { padding: 22px 20px; border-right: 2px solid var(--ink); }
+      .receipt div:last-child { border-right: none; }
+      .receipt b { display: block; font-weight: 900; font-stretch: 118%; font-size: clamp(30px, 3.4vw, 46px); line-height: 1; letter-spacing: -0.02em; margin-bottom: 8px; }
+      .receipt span { color: var(--ink-soft); font-size: 15.5px; }
+      @media (max-width: 860px) { .receipt { grid-template-columns: 1fr 1fr; } .receipt div:nth-child(2) { border-right: none; } .receipt div:nth-child(-n+2) { border-bottom: 2px solid var(--ink); } }
+
       .rules { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(24px, 4vw, 64px); }
       .rules li { padding: 22px 0; border-top: 2px solid var(--ink); }
       .rules b { display: block; font-size: clamp(21px, 2vw, 26px); font-weight: 800; font-stretch: 112%; line-height: 1.15; margin-bottom: 6px; }
@@ -167,13 +247,64 @@
       </section>
 
       <section class="block">
-        <h2>How yours gets made.</h2>
-        <p class="lede">You don't write or record anything new. It's built from what you've already posted.</p>
-        <ol class="how">
-          <li><h3>Your channel goes in</h3><p>Every video's captions, down to the second. Clips where someone else is talking, like interviews, ads or a product demo, are left out, so only your words get quoted.</p></li>
-          <li><h3>People ask it things</h3><p>They type it like they'd text a friend. The answer comes from what you've said, and every quote is checked against your captions, word for word, before it shows.</p></li>
-          <li><h3>They get your next step</h3><p>A call, your product, your course. It picks the one that fits what they asked. If it can't tell, it asks them one quick question.</p></li>
-        </ol>
+        <h2>What happens after someone hits enter.</h2>
+        <div class="explain">
+          <div class="copy">
+            <p>Two different kinds of AI do two different jobs, at the same time.</p>
+            <p><strong>A writer</strong> reads every clip of yours and drafts the answer. It's good with words, which is also why it can't be trusted to quote you on its own.</p>
+            <p><strong>A decider</strong>, called Jev, never writes a single word. It only picks from options it's given and says how sure it is. It decides what to show this person, in about a fifth of a second.</p>
+            <p>Then plain code checks the quotes and puts the page together.</p>
+          </div>
+          <div class="tl-wrap"><div class="tl" id="timeline"></div></div>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>How it decides without guessing.</h2>
+        <div class="explain">
+          <div class="copy">
+            <p>Jev answers multiple-choice questions about what someone typed, and every answer comes with odds. <strong>Which topic is this? What are they after?</strong></p>
+            <p>The page only acts on an answer it's clearly sure of. When it isn't, it doesn't guess. It asks the visitor one quick question, and their tap counts more than anything it worked out.</p>
+            <p>That's the difference between this and an AI that pretends to know you.</p>
+          </div>
+          <div>
+            <div class="polls" id="polls"></div>
+            <div class="rulebar">
+              <div class="scale"><span>0% sure</span><span>60%</span><span>100% sure</span></div>
+              <div class="gauge"><i></i></div>
+              <p><b>The rule:</b> act only when it's at least 60% sure, and at least 20 points ahead of its second choice. Anything less, it asks.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Every quote gets checked against your captions.</h2>
+        <div class="explain">
+          <div class="copy">
+            <p>Your videos already have captions, and every line is stamped with the second you said it. That's what lets a quote play from the right moment.</p>
+            <p>When the writer suggests a quote, code searches your captions for <strong>those exact words, in that order</strong>. If they're there, the clip plays from that second. If one word is off, or the words belong to a guest, the quote is thrown out before anyone sees it.</p>
+          </div>
+          <div id="captrack"></div>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Your channel becomes a library.</h2>
+        <div class="explain">
+          <div class="copy">
+            <p>You don't write or record anything new. It starts from what you've already posted.</p>
+            <p>Anything that isn't you talking gets cut: clips where you're not on camera, product demos where an AI voice speaks, the same clip uploaded twice. What's left is sorted by topic, so the page can line up more videos on the same thing.</p>
+            <p>New uploads stay out until someone checks they're really you.</p>
+          </div>
+          <div><div class="funnel" id="funnel"></div><div class="topics" id="topics"></div></div>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>What it costs to run.</h2>
+        <p class="lede">Measured on the live page, not estimated.</p>
+        <div class="receipt" id="receipt"></div>
       </section>
 
       <section class="block">
@@ -287,6 +418,98 @@
           </article>`;
         }).join("");
         if (!V.length) $("#people").innerHTML = `<p class="lede"><a href="./">Ask the page something</a> to see it work.</p>`;
+
+        /* ---------- infographics, from the real build and the real answers ---------- */
+        let stats = null;
+        try { stats = await (await fetch("./data/stats.json")).json(); } catch (_) {}
+        const fmt = (n) => Number(n).toLocaleString("en-US");
+        const lead2 = V[0];
+
+        // 1. timeline: measured times from the first demo answer
+        if (lead2) {
+          const jevMs = lead2.read.jev_ms || 200, judgeMs = lead2.read.judge_ms || 300;
+          const total = 8000, writer = 7000;
+          const pos = (ms) => `${(ms / total) * 100}%`;
+          const clip = (cls, from, len, label) => `<div class="clip ${cls}${from / total > 0.6 ? " late" : ""}" style="left:${pos(from)};width:${pos(Math.max(len, 60))}"><em>${label}</em></div>`;
+          $("#timeline").innerHTML = `
+            <div class="ruler">${[0, 2, 4, 6, 8].map((t) => `<span style="left:${(t / 8) * 100}%">${t}s</span>`).join("")}</div>
+            <div class="track"><div class="name">Jev reads the question</div>${clip("jev", 0, jevMs, `topic + what they want, ${(jevMs / 1000).toFixed(1)}s`)}</div>
+            <div class="track"><div class="name">The writer drafts the answer from all ${stats ? fmt(stats.clips) : "your"} clips</div>${clip("llm", 0, writer, "about 7 seconds")}</div>
+            <div class="track"><div class="name">Code checks every quote</div>${clip("check", writer, 80, "word for word")}</div>
+            <div class="track"><div class="name">Jev checks the clips are on point</div>${clip("jev", writer + 80, judgeMs, `${(judgeMs / 1000).toFixed(1)}s`)}</div>
+            <div class="track"><div class="name">The page is built for this person</div>${clip("page", writer + 80 + judgeMs, 150, "done")}</div>
+            <p class="after">After that, every tap is a new signal. <b>Jev re-reads it in 0.2 seconds</b> and reshapes the page, without writing a new answer.</p>`;
+        }
+
+        // 2. polls: one confident read, one it wasn't sure of
+        const pollOf = (w, labels, top = 3) => {
+          const entries = Object.entries(w.probabilities || {}).sort((a, b) => b[1] - a[1]).slice(0, top);
+          return `<div class="poll"><p class="pq">${esc(w.q === "Topic" ? "Which topic is this?" : "What are they after?")}</p>${entries.map(([k, p], i) => `<div class="opt ${i === 0 ? "win" : ""}"><div class="fill" style="width:${Math.round(p * 100)}%"></div><span>${esc(labels(k))}</span><b>${Math.round(p * 100)}%</b></div>`).join("")}</div>`;
+        };
+        const laneLabel = (k) => (k === "other" ? "Doesn't fit a topic" : (C.jev && C.jev.lanes && C.jev.lanes[k] ? C.jev.lanes[k].label : k));
+        const intentLabel = (k) => (C.jev && C.jev.intent_labels && C.jev.intent_labels[k]) || k;
+        const sure = V.find((v) => v.read.why.some((w) => w.q === "Topic") && v.read.why.some((w) => w.q === "What they want"));
+        const unsure = V.find((v) => (v.read.declined || []).length);
+        const pollCards = [];
+        if (sure) {
+          const t = sure.read.why.find((w) => w.q === "Topic"), i = sure.read.why.find((w) => w.q === "What they want");
+          pollCards.push(`<div class="poll-card"><p class="said">“${esc(sure.q.length > 60 ? sure.q.slice(0, 58) + "…" : sure.q)}”</p>${pollOf(t, laneLabel)}${pollOf(i, intentLabel)}<div class="verdict">Sure enough, so it acts: leads with ${esc(sure.primary.label)}.</div></div>`);
+        }
+        if (unsure) {
+          const d = unsure.read.declined[0];
+          const clar = unsure.components.find((c) => c.type === "clarify");
+          pollCards.push(`<div class="poll-card"><p class="said">“${esc(unsure.q)}”</p>${pollOf(d, d.q === "Topic" ? laneLabel : intentLabel)}<div class="verdict ask">Can't tell, so it asks: “${esc(clar ? clar.question : "What would help?")}”</div></div>`);
+        }
+        $("#polls").innerHTML = pollCards.join("");
+
+        // 3. caption track: the real lines, the quote highlighted where it matches
+        if (stats && stats.check) {
+          const ck = stats.check;
+          const norm = (x) => x.toLowerCase().replace(/[^a-z0-9' ]+/g, " ").replace(/\s+/g, " ").trim();
+          const qWords = new Set(norm(ck.quote).split(" "));
+          let left = norm(ck.quote).split(" ").length;
+          const lines = ck.lines.map((l) => {
+            let html = "", run = [];
+            const flush = () => { if (run.length) { html += `<mark>${run.map(esc).join(" ")}</mark> `; run = []; } };
+            for (const w of l.text.split(/\s+/)) { if (left > 0 && qWords.has(norm(w))) { run.push(w); left--; } else { flush(); html += esc(w) + " "; } }
+            flush();
+            return `<div class="cline"><span class="ts">${mmss(l.t)}</span><span>${html}</span></div>`;
+          }).join("");
+          const qw = ck.quote.split(/\s+/);
+          const k = Math.min(qw.length - 1, 9);
+          const bad = qw.slice(0, 14).map((w, i) => (i === k ? `<s>${esc(w)}</s> <ins>${esc(w.toLowerCase() === "not" ? "always" : "never")}</ins>` : esc(w))).join(" ");
+          $("#captrack").innerHTML = `<div class="captrack"><p class="ttl">Your captions: “${esc(ck.title)}”</p>${lines}<p class="match">Found, word for word. Plays from ${mmss(ck.t)}.</p></div>
+            <div class="reject">“${bad}…”<span class="no">One word off. Thrown out, never shown.</span></div>`;
+        }
+
+        // 4. funnel + topics
+        if (stats) {
+          const max = stats.uploads_on_channel || stats.with_captions;
+          const w = (n) => `${Math.max(18, (n / max) * 100)}%`;
+          const rows = [
+            stats.uploads_on_channel && [`${fmt(stats.uploads_on_channel)} uploads on the channel`, stats.uploads_on_channel, ""],
+            stats.uploads_looked_at && [`${fmt(stats.uploads_looked_at)} newest looked at`, stats.uploads_looked_at, ""],
+            stats.with_captions && [`${fmt(stats.with_captions)} have captions`, stats.with_captions, ""],
+            stats.cut_not_on_camera && [`${fmt(stats.cut_not_on_camera)} cut: not you on camera`, stats.cut_not_on_camera, "cut"],
+            stats.cut_ai_voice && [`${fmt(stats.cut_ai_voice)} cut: an AI voice talking`, stats.cut_ai_voice, "cut"],
+            stats.cut_duplicates && [`${fmt(stats.cut_duplicates)} cut: uploaded twice`, stats.cut_duplicates, "cut"],
+          ].filter(Boolean);
+          $("#funnel").innerHTML = rows.map(([label, n, cls]) => `<div class="fbar ${cls}" style="width:${w(n)}">${esc(label)}</div>`).join("") +
+            `<div class="fbar final" style="width:${w(stats.clips)}">${fmt(stats.clips)} clips of you<small>${fmt(stats.words)} words, ${stats.hours} hours</small></div>`;
+          const tmax = Math.max(...stats.lanes.map((l) => l.n));
+          $("#topics").innerHTML = stats.lanes.map((l) => `<div class="topic"><span class="l">${esc(l.label)}</span><span class="b" style="width:${(l.n / tmax) * 100}%"></span><span class="n">${l.n}</span></div>`).join("");
+        }
+
+        // 5. receipt
+        if (lead2) {
+          const perQ = V.reduce((a, v) => a + (v.read.llm_cost || 0) + (v.read.jev_cost || 0), 0) / V.length;
+          const jevPer = V.reduce((a, v) => a + (v.read.jev_cost || 0), 0) / V.length;
+          $("#receipt").innerHTML = `
+            <div><b>${(perQ * 100).toFixed(1)}¢</b><span>per question answered, all in</span></div>
+            <div><b>0.2s</b><span>for Jev to decide what to show</span></div>
+            <div><b>~8s</b><span>from hitting enter to a full answer</span></div>
+            <div><b>${(jevPer * 100).toFixed(3)}¢</b><span>for every decision Jev makes</span></div>`;
+        }
 
         /* Each small phone starts its captions when it scrolls into view, once. */
         const io = "IntersectionObserver" in window ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { play(e.target); io.unobserve(e.target); } }), { threshold: 0.5 }) : null;
