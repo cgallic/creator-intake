@@ -294,6 +294,7 @@ const CATALOG = {
 };
 
 function renderAnswer(raw, d) {
+  if (d.ui && d.ui.primary) primary = d.ui.primary; // before drawing, so every card agrees on the next step
   const moments = d.moments || [];
   const comps = d.components || [];
   const col = (name) => comps.filter((c) => c.column === name && CATALOG[c.type]).map((c) => CATALOG[c.type](c)).join("");
