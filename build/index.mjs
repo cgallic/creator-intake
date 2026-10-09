@@ -92,7 +92,7 @@ for (const [id, l] of listing) {
   // Prefer a human caption track ("en") over auto-captions ("en-orig", "en-en", ...).
   const cand = files.filter((f) => f.startsWith(id + ".")).sort((a, b) => a.length - b.length);
   const lines = cand.length ? captionLines(JSON.parse(fs.readFileSync(path.join(capDir, cand[0]), "utf8")), config.speaker === "solo") : [];
-  const title = m.title || l.title;
+  const title = String(m.title || l.title || "").replace(/(\s#\w+)+\s*$/, "").trim();
   const hit = lines.find((x) => capPatterns.some((re) => re.test(x.text)));
   if (hit) { patternHits.push({ id, title, line: hit.text }); continue; }
   if (!lines.length || !title) { missing.push(id); continue; }
@@ -112,9 +112,13 @@ for (const [id, l] of listing) {
 
 // Newest first, then fill the token budget.
 videos.sort((a, b) => String(b.published || "").localeCompare(String(a.published || "")));
-const clips = [], overBudget = [];
-let used = 0;
+const clips = [], overBudget = [], seenText = new Set();
+let dupes = 0, used = 0;
 for (const v of videos) {
+  // The same clip re-uploaded (identical captions) goes in once, newest copy.
+  const key = v.lines.map((l) => l.text).join(" ").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  if (seenText.has(key)) { dupes++; continue; }
+  seenText.add(key);
   const cost = tokens(v.lines.map((l) => l.text).join(" ")) + 40;
   if (used + cost > BUDGET) { overBudget.push(v.youtube_id); continue; }
   used += cost;
@@ -136,7 +140,7 @@ fs.writeFileSync(path.join(dir, "unscreened.json"), JSON.stringify(unscreened.ma
 // Homepage grid: config.featured_ids if set, otherwise the newest clips with a usable title.
 const pick = config.featured_ids?.length
   ? config.featured_ids.map((id) => clips.find((c) => c.youtube_id === id)).filter(Boolean)
-  : clips.filter((c) => c.title.length > 12 && c.title.length < 110).slice(0, 6);
+  : clips.filter((c, i, a) => c.title.length > 12 && c.title.length < 110 && a.findIndex((x) => x.title === c.title) === i).slice(0, 6);
 fs.writeFileSync(path.join(dir, "featured.json"), JSON.stringify({
   clips: pick.slice(0, 6).map((c) => ({ title: c.title, seconds: c.seconds, thumb: c.thumb, published: c.published, ask: c.title })),
 }));
@@ -149,6 +153,7 @@ console.log(JSON.stringify({
   est_tokens: used,
   budget: BUDGET,
   dropped_over_budget: overBudget.length,
+  duplicate_uploads: dupes,
   missing_captions: missing.length,
   excluded_by_caption_pattern: patternHits.length,
   unscreened: unscreened.length + (config.require_screening ? " (left out: require_screening)" : " (included)"),
