@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
   if (req.method === "GET") {
     const id = String((req.query && req.query.id) || "");
     if (!/^\d{4}-\d{2}-\d{2}\/[a-f0-9]{16}$/.test(id)) return res.status(404).json({ error: "not found" });
-    const job = await store.getJSON(`jobs/${id}.json`);
+    const job = await store.getJob(id);
     if (!job) return res.status(404).json({ error: "not found" });
     const { type, channel, slug, status, stage, detail, url, error, created_at, updated_at, name } = job;
     return res.status(200).json({ id, type, channel, slug, status, stage, detail, url, error, created_at, updated_at, name });
@@ -63,14 +63,14 @@ module.exports = async (req, res) => {
   const visitor = guard.visitorOf(req), day = today();
   const vk = `${day}:${visitor}`;
   if ((perVisitor.get(vk) || 0) >= 3) return res.status(429).json({ error: "That's three builds today. Try again tomorrow." });
-  const todays = await store.list(`jobs/${day}/`);
+  const todays = (await store.jobsOn([day])).filter((j) => j.type !== "claim");
   if (todays.length >= +(process.env.NEW_BUILDS_PER_DAY || 40)) return res.status(429).json({ error: "We've hit today's build limit. Try again tomorrow." });
   if (await guard.overCap()) return res.status(429).json({ error: "We've hit today's limit. Try again tomorrow." });
   perVisitor.set(vk, (perVisitor.get(vk) || 0) + 1);
 
   const id = `${day}/${crypto.randomBytes(8).toString("hex")}`;
   const now = new Date().toISOString();
-  await store.putJSON(`jobs/${id}.json`, {
+  await store.putJob(id, {
     id, type: "build", channel: ch.url, slug,
     status: "queued", stage: "queued", detail: "Waiting for a builder", created_at: now, updated_at: now,
   });

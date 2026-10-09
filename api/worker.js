@@ -15,13 +15,7 @@ const { SLUG } = require("./_creator");
 
 const authed = (req) => !!process.env.WORKER_SECRET && (req.headers.authorization || "") === `Bearer ${process.env.WORKER_SECRET}`;
 
-async function update(id, patch) {
-  const job = await store.getJSON(`jobs/${id}.json`);
-  if (!job) throw new Error("no such job");
-  const next = { ...job, ...patch, updated_at: new Date().toISOString() };
-  await store.putJSON(`jobs/${id}.json`, next);
-  return next;
-}
+const update = (id, patch) => store.updateJob(id, patch);
 
 module.exports = async (req, res) => {
   if (!authed(req)) return res.status(401).json({ error: "unauthorized" });
@@ -30,10 +24,7 @@ module.exports = async (req, res) => {
   try {
     if (a === "next" && req.method === "GET") {
       const days = [0, 1].map((d) => new Date(Date.now() - d * 864e5).toISOString().slice(0, 10));
-      const blobs = (await Promise.all(days.map((d) => store.list(`jobs/${d}/`)))).flat().sort((x, y) => new Date(x.uploadedAt) - new Date(y.uploadedAt));
-      for (const bl of blobs) {
-        const job = await store.getJSON(bl.pathname);
-        if (!job) continue;
+      for (const job of await store.jobsOn(days)) {
         const stale = (job.status === "working" || job.status === "building") && Date.now() - Date.parse(job.updated_at) > 30 * 60e3;
         if (job.status === "queued" || stale) return res.status(200).json(await update(job.id, { status: "working", stage: job.type === "claim" ? "checking" : "starting", detail: job.type === "claim" ? "Reading your channel description" : "A builder picked this up" }));
       }

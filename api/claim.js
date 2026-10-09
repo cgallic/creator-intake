@@ -77,7 +77,7 @@ module.exports = async (req, res) => {
       const day = new Date().toISOString().slice(0, 10);
       const id = `${day}/${crypto.randomBytes(8).toString("hex")}`;
       const now = new Date().toISOString();
-      await store.putJSON(`jobs/${id}.json`, {
+      await store.putJob(id, {
         id, type: "claim", slug: c, channel: cfg.channels[0], code: verifyCode(c),
         offer: offerUrl ? { url: offerUrl, label: String(b.offer_label || "").trim().slice(0, 40) || null } : null,
         webhook: hook, status: "queued", stage: "queued", detail: "Waiting to check your channel", created_at: now, updated_at: now,
@@ -87,7 +87,7 @@ module.exports = async (req, res) => {
 
     const id = String(b.id || "");
     if (!/^\d{4}-\d{2}-\d{2}\/[a-f0-9]{16}$/.test(id)) return res.status(404).json({ error: "not found" });
-    const job = await store.getJSON(`jobs/${id}.json`);
+    const job = await store.getJob(id);
     if (!job || job.type !== "claim") return res.status(404).json({ error: "not found" });
     if (job.status !== "verified" && job.status !== "claimed") return res.status(409).json({ error: "We haven't confirmed the code in your channel description yet." });
 
@@ -119,7 +119,7 @@ module.exports = async (req, res) => {
       if (!cfg) return res.status(404).json({ error: "not found" });
       await store.putJSON(`creators/${job.slug}/config.json`, ownerConfig(cfg, { offer: job.offer, paid: paidOk }));
       await store.putJSON(`creators/${job.slug}/private.json`, { webhook: job.webhook || null, claimed_job: id, paid: paidOk, at: new Date().toISOString() });
-      await store.putJSON(`jobs/${id}.json`, { ...job, status: "claimed", stage: "claimed", detail: "It's yours", url: `/c/${job.slug}`, updated_at: new Date().toISOString() });
+      await store.updateJob(id, { status: "claimed", stage: "claimed", detail: "It's yours", url: `/c/${job.slug}` });
       return res.status(200).json({ url: `/c/${job.slug}` });
     }
     return res.status(400).json({ error: "unknown action" });
