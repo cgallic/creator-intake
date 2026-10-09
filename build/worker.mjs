@@ -37,6 +37,8 @@ const { tagLanes } = require("../api/_jev.js");
 const TARGET_WORDS = +(process.env.TARGET_WORDS || 30000);
 const MAX_UPLOADS = +(process.env.MAX_UPLOADS || 200);
 const ROUND = 60;
+const MIN_CLIPS = +(process.env.MIN_CLIPS || 40);       // keep going until there are this many clips too
+const WORDS_PER_CLIP = +(process.env.WORDS_PER_CLIP || 2500); // so a few hour-long videos can't fill the page
 const MODEL = process.env.WORKER_MODEL || "openai/gpt-6-luna";
 const POLL_MS = +(process.env.POLL_MS || 15000);
 const BUDGET = 150000;
@@ -111,7 +113,11 @@ async function fetchCaptions(jobId, videos, dir, wordsSoFar = 0) {
   for (const v of videos) {
     const cand = files.filter((f) => f.startsWith(v.id + ".")).sort((a, b) => a.length - b.length);
     if (!cand.length) continue;
-    const lines = captionLines(JSON.parse(fs.readFileSync(path.join(dir, cand[0]), "utf8")), false);
+    const all = captionLines(JSON.parse(fs.readFileSync(path.join(dir, cand[0]), "utf8")), false);
+    // Whole lines from the start, up to WORDS_PER_CLIP words: quotes stay word for word.
+    const lines = [];
+    let n = 0;
+    for (const l of all) { n += l.text.split(/\s+/).length; if (n > WORDS_PER_CLIP && lines.length) break; lines.push(l); }
     if (!lines.length) continue;
     const d = dates.get(v.id);
     out.push({ ...v, published: d && /^\d{8}$/.test(d) ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : null, lines });
@@ -261,7 +267,7 @@ async function build(job) {
     const yours = [];
     let captioned = 0, looked = 0, words = 0;
     const wordsOf = (c) => c.lines.filter((l) => l.who !== "other").reduce((a, l) => a + l.text.split(/\s+/).length, 0);
-    for (let i = 0; i < videos.length && words < TARGET_WORDS; i += ROUND) {
+    for (let i = 0; i < videos.length && (words < TARGET_WORDS || yours.length < MIN_CLIPS); i += ROUND) {
       const round = videos.slice(i, i + ROUND);
       looked += round.length;
       const roundDir = fs.mkdtempSync(path.join(dir, "r-"));
