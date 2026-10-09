@@ -2,26 +2,80 @@
   "version": 2,
   "cleanUrls": true,
   "functions": {
-    "api/answer.js": { "maxDuration": 60 },
-    "api/mold.js": { "maxDuration": 15 },
-    "api/lead.js": { "maxDuration": 15 },
-    "api/creator.js": { "maxDuration": 15 },
-    "api/new.js": { "maxDuration": 30 },
-    "api/worker.js": { "maxDuration": 60 },
-    "api/ai.js": { "maxDuration": 60 }
+    "api/answer.js": {
+      "maxDuration": 60
+    },
+    "api/mold.js": {
+      "maxDuration": 15
+    },
+    "api/lead.js": {
+      "maxDuration": 15
+    },
+    "api/creator.js": {
+      "maxDuration": 15
+    },
+    "api/new.js": {
+      "maxDuration": 30
+    },
+    "api/worker.js": {
+      "maxDuration": 60
+    },
+    "api/ai.js": {
+      "maxDuration": 60
+    }
   },
   "rewrites": [
-    { "source": "/api/ai/:path*", "destination": "/api/ai?path=:path*" },
-    { "source": "/c/:slug/api/:fn", "destination": "/api/:fn?c=:slug" },
-    { "source": "/c/:slug/data/:f", "destination": "/api/creator?c=:slug&f=:f" },
-    { "source": "/c/:slug/styles.css", "destination": "/styles.css" },
-    { "source": "/c/:slug/script.js", "destination": "/script.js" },
-    { "source": "/c/:slug/for-creators", "destination": "/for-creators.html" },
-    { "source": "/c/:slug/new", "destination": "/new.html" },
-    { "source": "/c/:slug", "destination": "/index.html" }
+    {
+      "source": "/api/ai/:path*",
+      "destination": "/api/ai?path=:path*"
+    },
+    {
+      "source": "/c/:slug/api/:fn",
+      "destination": "/api/:fn?c=:slug"
+    },
+    {
+      "source": "/c/:slug/data/:f",
+      "destination": "/api/creator?c=:slug&f=:f"
+    },
+    {
+      "source": "/c/:slug/styles.css",
+      "destination": "/styles.css"
+    },
+    {
+      "source": "/c/:slug/script.js",
+      "destination": "/script.js"
+    },
+    {
+      "source": "/c/:slug/for-creators",
+      "destination": "/for-creators"
+    },
+    {
+      "source": "/c/:slug/new",
+      "destination": "/new"
+    },
+    {
+      "source": "/c/:slug",
+      "destination": "/"
+    }
   ],
   "headers": [
-    { "source": "/data/corpus.json", "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }] },
-    { "source": "/c/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+    {
+      "source": "/data/corpus.json",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/c/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
   ]
 }
