@@ -519,3 +519,9 @@ body.booting .shell { visibility: hidden; }
 .call-big svg { flex: none; }
 .submit-review:disabled { opacity: 0.6; cursor: default; }
 #sheet-error { color: var(--accent); min-height: 1em; }
+.phone-link { white-space: nowrap; }
+@media (max-width: 560px) {
+  .ask { flex-direction: column; padding: 8px 8px 8px 14px; }
+  .ask-go { justify-content: center; padding: 13px 20px; }
+  .wordmark-sub { display: none; }
+}
