@@ -46,7 +46,7 @@ It's MIT licensed: a static page, Vercel functions, and a yt-dlp worker you run 
 box. Anyone can build an unofficial, noindexed preview of any channel. If it's yours,
 you prove that with a code in your channel description, and the page gets your link.
 
-Live: https://www.connorgallic.com/ask (mine) · build one: https://ask-connor.vercel.app/new
+Live: https://www.connorgallic.com/ask (mine) · build one: https://www.connorgallic.com/ask/new
 
 I'd especially like feedback on the quote verification and the speaker heuristics.
 That's where it can go wrong.
@@ -57,19 +57,19 @@ That's where it can go wrong.
 - **Tagline (60 chars):** Your videos answer your DMs and book the call
 - **Description:** Paste your YouTube channel. Your page answers every question with the
   exact clip where you already said it, verified word for word, then sends people to
-  your link. It never talks as you. Free to try, $49 once to make it yours. Open source.
+  your link. It never talks as you. Free to try and free to claim during launch. Open source.
 - **Gallery:**
   1. A question typed, and the clip playing from the second, with the quote.
   2. "Why this page?", showing what it decided and how sure it was.
   3. The four-visitors comparison from /for-creators.
   4. Pricing.
 - **Maker comment:** the story of building it on my own channel, the AI-receptionist
-  clip it caught, and the price (once, not monthly, no revenue share).
+  clip it caught, and the price (free at launch, no monthly fee, no revenue share).
 
 ## Before launch
 
 - [ ] Name and domain
-- [ ] Set `STRIPE_SECRET_KEY` on the Vercel project, or launch in free-claim mode
+- [x] Launch in free-claim mode (no `STRIPE_SECRET_KEY`; set it later to charge)
 - [ ] 4+ gallery pages built and spot-checked
 - [ ] Set `LEAD_WEBHOOK_URL` for Connor's own page, so there's an outcome number
 - [ ] 40-second screen recording: a question, then the clip, then "Why this page?"

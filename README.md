@@ -16,7 +16,7 @@ It answers *about* what the creator said and shows the receipt. It never talks a
 
 - Live example: **https://www.connorgallic.com/ask**
 - How it works, with real numbers: **https://www.connorgallic.com/ask/for-creators**
-- Build a preview from any channel: **https://ask-connor.vercel.app/new**
+- Build a preview from any channel: **https://www.connorgallic.com/ask/new**
 
 About $0.002 a question with GPT-6 Luna on OpenRouter, and about $0.00004 per decision.
 

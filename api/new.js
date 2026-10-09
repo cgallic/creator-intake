@@ -2,7 +2,7 @@
  * Build a preview page from any public channel. Previews are labelled unofficial, kept
  * out of search, and their only next step is the creator's own channel. The OWNER
  * turns one into their page by claiming it (api/claim.js): a code in the channel
- * description proves it's theirs, then $49 once.
+ * description proves it's theirs, then Stripe Checkout (free with no STRIPE_SECRET_KEY).
  *
  *   POST /api/new { channel }      -> { id }  or { ready: true, url } if built in the last 7 days
  *   GET  /api/new?id=<id>          -> the job's status (new.html and claim.html poll it)
