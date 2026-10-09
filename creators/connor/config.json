@@ -136,7 +136,7 @@
       {
         "key": "goal",
         "label": "Goal",
-        "description": "What they want to happen, in their words."
+        "description": "The outcome they want, as a short phrase (e.g. 'stop missing calls while on jobs'). Null if they only asked a question and didn't say what they want."
       },
       {
         "key": "stuck_on",

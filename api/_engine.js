@@ -173,6 +173,7 @@ function build(config, corpus) {
     const want = words(said);
     return corpus.clips
       .filter((c) => !exclude.has(c.id) && (!lane || c.lane === lane))
+    .filter((c, i, a) => { const k = c.title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); return a.findIndex((x) => x.title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() === k) === i; })
       .map((c) => {
         const w = words(c.title + " " + c.lines.slice(0, 4).map((l) => l.text).join(" "));
         let o = 0;

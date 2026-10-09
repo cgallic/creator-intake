@@ -118,7 +118,16 @@ function resetAll() {
   resetBtn.hidden = true; stickyCall.hidden = true;
   closeSheet(); closeVideo(); stopAudio();
   askInput.value = ""; current = null;
+  resetPrimary();
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+/* Back to the creator's default next step (a previous answer may have swapped it). */
+function resetPrimary() {
+  primary = null;
+  const o = C.offer;
+  $("#header-cta").href = o.url; $("#header-cta-label").textContent = o.header_label || o.cta_label;
+  $("#sticky-call").href = o.url; $("#sticky-label").textContent = o.sticky_label || o.cta_label;
+  for (const a of ["#header-cta", "#sticky-call"]) /^https?:/.test(o.url) ? $(a).setAttribute("target", "_blank") : $(a).removeAttribute("target");
 }
 
 function thinking() {
@@ -243,12 +252,16 @@ const CATALOG = {
       <button class="brief-cta" data-open-sheet>${esc(C.offer.brief_cta || C.offer.cta_label)}</button>
       <p class="brief-note">${esc(C.offer.note || "")}</p>
     </div></div>`,
-  offer: () => `
+  offer: () => {
+    // The heading and note describe the configured offer only when it IS the next step shown.
+    const isOffer = !primary || primary.url === C.offer.url;
+    return `
     <div class="panel d2"><div class="panel-pad">
-      <span class="panel-tag"><span class="dot"></span>${esc(C.offer.name)}</span>
+      <span class="panel-tag"><span class="dot"></span>${esc(isOffer ? C.offer.name : "Your next step")}</span>
       <div style="margin-top:12px">${offerButton()}</div>
-      <p class="brief-note">${esc(C.offer.note || "")}</p>
-    </div></div>`,
+      ${isOffer && C.offer.note ? `<p class="brief-note">${esc(C.offer.note)}</p>` : ""}
+    </div></div>`;
+  },
   card: (c) => `
     <div class="panel d3 card-x card-${esc(c.id)}"><div class="panel-pad">
       <span class="panel-tag"><span class="dot"></span>${esc(c.kicker || "")}</span>
@@ -327,7 +340,7 @@ function leadMoment(m) {
       <div class="video-poster">
         <img src="${esc(m.thumb)}" alt="" onerror="this.style.display='none'"/>
         <div class="video-overlay-top">
-          <span class="match-pill">▶ ${esc(WHO)} answers this · starts at ${mmss(m.t)}</span>
+          <span class="match-pill">▶ ${esc(WHO)} answers this · ${m.t < 3 ? "right from the start" : `starts at ${mmss(m.t)}`}</span>
           ${m.seconds ? `<span class="dur-pill">${mmss(m.seconds)}</span>` : ""}
         </div>
         <div class="play-btn">${PLAY.replace(/16/g, "26")}</div>
@@ -337,7 +350,7 @@ function leadMoment(m) {
         </div>
       </div>
       <div class="video-foot quote-foot">
-        <div class="tlabel">In ${esc(WHO)}'s words, at ${mmss(m.t)}</div>
+        <div class="tlabel">In ${esc(WHO)}'s words, ${m.t < 3 ? "as the clip opens" : `at ${mmss(m.t)}`}</div>
         <blockquote class="moment-quote">“${esc(m.quote)}”</blockquote>
         <div class="video-links">
           <span class="video-ep">${esc(m.why)}</span>
