@@ -14,7 +14,7 @@ let WHO = "";          // config.short_name
 const $ = (s) => document.querySelector(s);
 function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 /* model text may carry <strong>/<b> and nothing else */
-function rich(s) { return esc(s).replace(/&lt;(\/?)(strong|b|em)&gt;/g, "<$1$2>"); }
+function rich(s) { return esc(s).replace(/&lt;(\/?)(strong|b|em)&gt;/g, "<$1$2>").replace(/\*\*([^*]+?)\*\*/g, "<strong>$1</strong>").replace(/\*\*/g, ""); }
 function stripTags(s) { return String(s || "").replace(/<[^>]+>/g, ""); }
 function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 function mmss(t) { t = Math.max(0, Math.floor(t || 0)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; }
