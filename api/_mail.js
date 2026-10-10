@@ -11,7 +11,7 @@ async function send({ to, subject, text, idempotencyKey }) {
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, "content-type": "application/json", ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}) },
-    body: JSON.stringify({ from: FROM, to: [to], bcc: [OWNER], reply_to: OWNER, subject, text, html }),
+    body: JSON.stringify({ from: FROM, to: [to], ...(to === OWNER ? {} : { bcc: [OWNER] }), reply_to: OWNER, subject, text, html }),
   });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(d.message || `resend ${r.status}`);
@@ -40,4 +40,20 @@ Connor`,
   };
 }
 
-module.exports = { send, lifetimeWelcome };
+/** Connor's notice of a Lifetime Pro sale. */
+function saleNotice({ name, email, amount, slug, origin, sold, cap, emailed, paymentIntent }) {
+  const usd = `$${Math.round((amount || 0) / 100)}`;
+  const who = [name, email && `<${email}>`].filter(Boolean).join(" ") || "Someone (no email on the checkout)";
+  return {
+    subject: `Lifetime Pro sold: ${usd}${email ? ` to ${email}` : ""}`,
+    text: `${who} bought Lifetime Pro for ${usd}.
+
+${slug ? `Their page: ${origin}/c/${slug}` : "They haven't built a page yet."}
+Sold so far: ${sold} of ${cap}.
+${paymentIntent ? `In Stripe: https://dashboard.stripe.com/payments/${paymentIntent}` : ""}
+
+${emailed ? "Their welcome email went out (you were bcc'd). Replies come to you." : `Their welcome email did NOT go out${email ? `. Write to ${email} yourself.` : "."}`}`,
+  };
+}
+
+module.exports = { send, lifetimeWelcome, saleNotice, OWNER };

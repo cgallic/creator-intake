@@ -328,7 +328,13 @@ async function verifyClaim(job) {
 
 /* ---------- the loop ---------- */
 const once = process.argv.includes("--once");
+let salesAt = 0;
 for (;;) {
+  // Every minute: settle Lifetime Pro sales whose buyer never came back to the confirm page.
+  if (Date.now() - salesAt > 60000) {
+    salesAt = Date.now();
+    api("/api/worker?a=sales", {}).then((d) => d.settled && console.log(`settled ${d.settled} sale(s)`)).catch((e) => console.warn("sales:", e.message));
+  }
   let job = null;
   try { job = await api("/api/worker?a=next"); } catch (e) { console.warn("poll:", e.message); }
   if (job && job.id) {

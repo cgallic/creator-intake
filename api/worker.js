@@ -7,11 +7,13 @@
  *   POST ?a=publish   {id, slug, files: {config, corpus, featured, stats}}
  *   POST ?a=verified  {id, name}          a claim's code was found in the channel description
  *   POST ?a=fail      {id, error}
+ *   POST ?a=sales                     settle paid Lifetime Pro checkouts nobody confirmed (buyer closed the tab)
  *
  * A job picked up more than 30 minutes ago and not finished goes back in the queue.
  */
 const store = require("./_store");
 const { SLUG } = require("./_creator");
+const sales = require("./_sales");
 
 const authed = (req) => !!process.env.WORKER_SECRET && (req.headers.authorization || "") === `Bearer ${process.env.WORKER_SECRET}`;
 
@@ -50,6 +52,10 @@ module.exports = async (req, res) => {
     if (a === "fail" && req.method === "POST") {
       await update(String(b.id), { status: "failed", stage: "failed", error: String(b.error || "The build failed.").slice(0, 300) });
       return res.status(200).json({ ok: true });
+    }
+    if (a === "sales" && req.method === "POST") {
+      const origin = process.env.PUBLIC_URL || `https://${req.headers["x-forwarded-host"] || req.headers.host}`;
+      return res.status(200).json(await sales.sweep(origin));
     }
     return res.status(400).json({ error: "unknown action" });
   } catch (e) {
